@@ -48,6 +48,9 @@ Please go to the browser and run the application with the URL: https://localhost
      <li>
         Cancel reminders: Cancel reminders in bulk.
       </li>
+      <li>
+        Audit reports: Download audit reports in bulk.
+      </li>
   </ul>
 
 #### 2. Advanced filtering:
