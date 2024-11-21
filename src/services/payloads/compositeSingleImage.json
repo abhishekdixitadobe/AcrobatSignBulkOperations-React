@@ -1,0 +1,19 @@
+{
+    "layers":[
+        { 
+            "edit": {}, 
+            "name": "firefly-background",
+            "input": { 
+              "href": "",                               
+              "storage": "external" 
+            } 
+        },
+        { 
+          "edit": {},
+          "name":"banner-text",
+          "text": {
+            "content": "Good Bye"
+          }
+        }
+      ]
+}
