@@ -25,6 +25,7 @@ Perform these steps using a terminal (or Command line in Windows):
 <ul>
    <li> Please follow the steps mentioned in the link below to get the Client Id and Client Secret values.  https://opensource.adobe.com/acrobat-sign/developer_guide/gstarted.html</li>
    <li> Redirect URL: Please use https://localhost:3000</li>
+   <li> Update the CLIENT_ID, client_secret, REDIRECT_URI, SCOPE, AUTH_URL and OAUTH_TOKEN_URL in the .env file. </li>
 </ul>
 ### Run the app
 
