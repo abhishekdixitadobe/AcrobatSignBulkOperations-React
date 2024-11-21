@@ -734,6 +734,62 @@ app.post('/api/exchange-token', async (req, res) => {
     res.status(500).json({ error: 'Token exchange failed' });
   }
 });
+
+app.post('/api/integration-token', async (req, res) => {
+  try {
+    const integrationKey = process.env.INTEGRATION_KEY;
+    req.session.bearerToken = integrationKey;  // Save the token in the session
+    const userUrl = ADOBE_SIGN_BASE_URL + 'users/me' ;
+    console.log("userUrl--------",userUrl);
+    const userData = await axios.get(userUrl, {
+        headers: {
+          'Authorization': 'Bearer '+integrationKey,
+        },
+      }
+    );
+    // Send the access token back to the client
+    console.log("userData.data---------",userData.data);
+    const userId = userData.data.id;
+    const email = userData.data.email;
+    const loginTime = new Date();
+    const ipAddress = req.ip;
+    const device = req.headers['user-agent'];
+
+    // Store user info in session
+    req.session.userId = userId;
+    req.session.userEmail = email;
+    // Example log
+    logger.info('User login', {
+      userId: userData.data.id,
+      email: userData.data.email,
+      loginTime: loginTime,
+      action: 'Login',
+    });
+    if(initializeDb){
+        await db.execute(
+          'INSERT INTO user_logins (user_id, login_time, ip_address, device, email) VALUES (?, ?, ?, ?,?)',
+          [userId, loginTime, ipAddress, device, email]
+        );
+    }else{
+      logger.info('User login', {
+        userId: userData.data.id,
+        email: userData.data.email,
+        loginTime: loginTime,
+        action: 'Login',
+      });
+    }
+
+    const resData = {
+      "authData": integrationKey,
+      "userData": userData.data 
+    }
+    res.json(resData);
+  } catch (error) {
+    console.error('Token exchange failed', error);
+    res.status(500).json({ error: 'Token exchange failed' });
+  }
+});
+
 // Start the server
 const server = https.createServer(options, app);
 server.listen(port, () => {

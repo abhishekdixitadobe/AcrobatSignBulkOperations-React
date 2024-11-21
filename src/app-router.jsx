@@ -23,6 +23,7 @@ import Upload from "./views/upload";
 import Info from "./views/info";
 import Login from "./views/login";
 import OAuthCallback from "./components/oauth-callback"; // Handle OAuth callback
+import IntegrationCallback from "./components/integrationkey-callback"; // Handle OAuth callback
 import ProtectedRoute from "./components/protected-route"; // Import ProtectedRoute component
 import AgreementsPage from "./views/agreements";
 import AdminLogin from "./views/admin"
@@ -49,6 +50,7 @@ const AppRouter = () => {
       <Route path={`${basename}/adminLogin/`} element={<AdminLogin />} />
       {/* OAuth callback route */}
       <Route path={`${basename}/callback`} element={<OAuthCallback />} />
+      <Route path={`${basename}/integrationKey`} element={<IntegrationCallback />} />
 
       {/* Protected routes */}
       <Route

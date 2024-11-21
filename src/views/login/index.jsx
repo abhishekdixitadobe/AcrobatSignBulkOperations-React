@@ -38,11 +38,18 @@ const Login = () => {
       }
      // window.location.href = AUTH_URL;
     };
+    const handleIntegrationLogin = () => {
+        window.location.href = "https://localhost:3000/integrationKey";
+     // window.location.href = AUTH_URL;
+    };
     const handleAdminLogin = () => {
       console.log("Admin login button clicked");
       navigate('/adminLogin/');
     };
-  
+    // Access environment variables
+    const showOAuthLogin = process.env.REACT_APP_SHOW_OAUTH_LOGIN === 'true';
+    const showIntegrationLogin = process.env.REACT_APP_SHOW_INTEGRATION_LOGIN === 'true';
+
     return (
         <div
         style={{
@@ -70,6 +77,7 @@ const Login = () => {
       >
         <Card>
             <Content>
+                      {showOAuthLogin && (
                         <Button
                            UNSAFE_style={{
                             width: "100%",
@@ -83,6 +91,22 @@ const Login = () => {
                         >
                             <Text>Login with Adobe Sign</Text>
                         </Button>
+                      )}
+                        {showIntegrationLogin && (
+                            <Button
+                                UNSAFE_style={{
+                                    width: "100%",
+                                    marginBottom: "1rem",
+                                    backgroundColor: "#0070d2",
+                                    color: "white"
+                                }}
+                                variant="accent"
+                                style="fill"
+                                onPress={handleIntegrationLogin}
+                            >
+                                <Text>Login with Integration key</Text>
+                            </Button>
+                        )}
                          {/* Commenting out the "Login as tool admin" button */}
             {/*
                         <Button
