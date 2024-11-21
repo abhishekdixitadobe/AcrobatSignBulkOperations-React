@@ -27,6 +27,7 @@ Perform these steps using a terminal (or Command line in Windows):
    <li> Redirect URL: Please use https://localhost:3000</li>
    <li> Update the CLIENT_ID, client_secret, REDIRECT_URI, SCOPE, AUTH_URL and OAUTH_TOKEN_URL in the .env file. </li>
 </ul>
+
 ### Run the app
 
 Paste this command in terminal / command line: `npm start`
