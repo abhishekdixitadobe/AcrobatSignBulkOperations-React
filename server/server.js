@@ -2,7 +2,6 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const csv = require("csv-parser");
 const app = express();
-
 const path = require("path");
 const request = require("request");
 require("dotenv").config();
@@ -24,9 +23,73 @@ const REGEX_PATTERN = /^[^<>:"/\\|?*]*$/;
 
 const CLIENT_ID = process.env.CLIENT_ID; 
 const REDIRECT_URI = process.env.REDIRECT_URI; 
-const AUTH_BASE_URL = process.env.AUTH_URL; 
+const AUTH_BASE_URL = process.env.BASE_URL + '/public/oauth/v2'; 
 const SCOPE = process.env.SCOPE;
+const OAUTH_TOKEN_URL = process.env.BASE_URL +'/oauth/v2/token';
+const OAUTH_REFRESH_TOKEN_URL = process.env.BASE_URL +'/oauth/v2/refresh';
 
+
+
+function createApiClient(req) {
+  const client = axios.create();
+  
+  client.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (error.response && error.response.status === 401) {
+        console.log("Token expired, refreshing...");
+
+        try {
+          const refreshToken = req.session.tokens.refreshToken;
+          const newTokens = await refreshTokens(refreshToken);
+
+          req.session.tokens = {
+            accessToken: newTokens.accessToken,
+            refreshToken: newTokens.refreshToken,
+          };
+
+          error.config.headers["Authorization"] = `Bearer ${newTokens.accessToken}`;
+          return client.request(error.config);
+        } catch (refreshError) {
+          console.error("Error refreshing tokens:", refreshError.message);
+          return Promise.reject(refreshError);
+        }
+      }
+
+      return Promise.reject(error);
+    }
+  );
+
+  return client;
+}
+
+
+async function refreshTokens(refreshToken) {
+  try {
+    const response = await axios.post(
+      OAUTH_REFRESH_TOKEN_URL,
+      querystring.stringify({
+        client_id: CLIENT_ID,
+        client_secret: process.env.client_secret,
+        refresh_token: refreshToken, // Use stored refresh token
+        grant_type: "refresh_token",
+      }),
+      {
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    return {
+      accessToken: response.data.access_token,
+      refreshToken: response.data.refresh_token,
+    };
+  } catch (error) {
+    console.error("Error refreshing tokens", error);
+    throw new Error("Failed to refresh tokens");
+  }
+}
 
 app.use(cors());
 app.use(express.json({ limit: "50mb" }));
@@ -40,7 +103,7 @@ const staticPath = path.join(__dirname, 'static');
 app.use(express.static(staticPath));
 
 
-const ADOBE_SIGN_BASE_URL = process.env.ADOBE_SIGN_BASE_URL; // 'https://api.in1.adobesign.com:443/api/rest/v6/';
+const ADOBE_SIGN_BASE_URL = process.env.BASE_URL + "/api/rest/v6/"; // 'https://api.in1.adobesign.com:443/api/rest/v6/';
 const initializeDb = process.env.INITIALIZE_DB === 'true'; 
 
 // SSL
@@ -148,9 +211,7 @@ app.use(
 const { log, clearLog } = require("./logging/logger");
 const logRoute = require("./logging/logRoute");
 app.use((req, res, next) => {
-  if (req.session.bearerToken) {
-    req.headers['Authorization'] = `Bearer ${req.session.bearerToken}`;
-  }
+  req.session.tokens = req.session.tokens || {}; // Ensure tokens are initialized
   console.log(`Received request for: ${req.url}`);
   next();
 });
@@ -202,17 +263,18 @@ app.post('/api/download-auditReport', async (req, res) => {
 
   const { ids } = req.body;
   const zip = new JSZip();
+  const apiClient = createApiClient(req);
   try {
     const files = await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}agreements/${id}/auditTrail`;
         console.log("download audit report endpoint::",endpoint);
-        const response = await axios.get(endpoint, {
+        const response = await apiClient.get(endpoint, {
           headers: {
-            'Authorization': req.headers['authorization'], 
+            'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
             'Content-Type': 'application/json',
           },
-          responseType: 'arraybuffer' 
+          responseType: 'arraybuffer', // Required for binary data
         });
         const filename = `auditTrail_${id}.csv`; 
         zip.file(filename, response.data, { binary: true });
@@ -246,17 +308,18 @@ app.post('/api/download-formfields', async (req, res) => {
 
   const { ids } = req.body;
   const zip = new JSZip();
+  const apiClient = createApiClient(req);
   try {
     const files = await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}agreements/${id}/formData`;
         console.log("download formfields endpoint::",endpoint);
-        const response = await axios.get(endpoint, {
+        const response = await apiClient.get(endpoint, {
           headers: {
-            'Authorization': req.headers['authorization'], 
+            'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
             'Content-Type': 'application/json',
           },
-          responseType: 'arraybuffer' 
+          responseType: 'arraybuffer', // Required for binary data
         });
         const filename = `agreement_${id}.csv`; 
         zip.file(filename, response.data, { binary: true });
@@ -290,18 +353,18 @@ app.post('/api/download-agreements', async (req, res) => {
 
     const { ids } = req.body;
     const zip = new JSZip();
+    const apiClient = createApiClient(req);
     try {
       const files = await Promise.all(
         ids.map(async (id) => {
           const endpoint = `${ADOBE_SIGN_BASE_URL}agreements/${id}/combinedDocument`;
           console.log("download endpoint::",endpoint);
-          console.log("download req.headers['authorization']::",req.headers['authorization']);
-          const response = await axios.get(endpoint, {
+          const response = await apiClient.get(endpoint, {
             headers: {
-              'Authorization': req.headers['authorization'], // Pass Bearer token
+              'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
               'Content-Type': 'application/json',
             },
-            responseType: 'arraybuffer' // Set to handle binary data
+            responseType: 'arraybuffer', // Required for binary data
           });
           const filename = `agreement_${id}.pdf`; // Name the file as needed
           zip.file(filename, response.data, { binary: true });
@@ -335,17 +398,18 @@ app.post('/api/download-templateFormfields', async (req, res) => {
 
   const { ids } = req.body;
   const zip = new JSZip();
+  const apiClient = createApiClient(req);
   try {
     const files = await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/formData`;
         console.log("template download formfields endpoint::",endpoint);
-        const response = await axios.get(endpoint, {
+        const response = await apiClient.get(endpoint, {
           headers: {
-            'Authorization': req.headers['authorization'], 
+            'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
             'Content-Type': 'application/json',
           },
-          responseType: 'arraybuffer' 
+          responseType: 'arraybuffer', // Required for binary data
         });
         const filename = `template_${id}.csv`; 
         zip.file(filename, response.data, { binary: true });
@@ -373,17 +437,18 @@ app.post('/api/download-templateDocument', async (req, res) => {
 
   const { ids } = req.body;
   const zip = new JSZip();
+  const apiClient = createApiClient(req);
   try {
     const files = await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/combinedDocument`;
         console.log("template download endpoint::",endpoint);
-        const response = await axios.get(endpoint, {
+        const response = await apiClient.get(endpoint, {
           headers: {
-            'Authorization': req.headers['authorization'], // Pass Bearer token
+            'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
             'Content-Type': 'application/json',
           },
-          responseType: 'arraybuffer' // Set to handle binary data
+          responseType: 'arraybuffer', // Required for binary data
         });
         const filename = `template_${id}.pdf`; // Name the file as needed
         zip.file(filename, response.data, { binary: true });
@@ -411,11 +476,11 @@ app.post('/api/search', async (req, res) => {
   console.log('Inside api/search');
   const { startDate, endDate, email, selectedStatuses } = req.body; 
   console.log("Received data: ", startDate, endDate, email);
-  
+  const apiClient = createApiClient(req);
   const isoStartDate = convertToISO8601(startDate);
-  console.log(isoStartDate);  // Output: 2020-02-03T00:00:00.000Z
+  console.log(isoStartDate);  
   const isoEndDate = convertToISO8601(endDate);
-  console.log(isoEndDate);  // Output: 2020-02-03T00:00:00.000Z
+  console.log(isoEndDate);  
 
   const searchEndpoint = ADOBE_SIGN_BASE_URL + 'search';
   console.log('selectedStatuses---------', selectedStatuses);
@@ -426,7 +491,7 @@ app.post('/api/search', async (req, res) => {
     let hasNext = true;   // Flag to control the loop
 
     while (hasNext) {
-      const response = await axios.post(
+      const response = await apiClient.post( 
         searchEndpoint,
         {
           scope: ["AGREEMENT_ASSETS"],
@@ -446,9 +511,7 @@ app.post('/api/search', async (req, res) => {
         },
         {
           headers: {
-            'Authorization': req.headers['authorization'],  
-            'Content-Type': 'application/json',  
-            'x-api-user': `email:${email}`
+            'x-api-user': `email:${email}` // Authorization header handled by interceptor
           },
         }
       );
@@ -464,6 +527,7 @@ app.post('/api/search', async (req, res) => {
         startIndex = nextIndex; // Update startIndex for the next iteration
       }
     }
+
     const userId = req.session.userId;
     const userEmail = req.session.userEmail;
     logger.info('User Activity', {
@@ -471,65 +535,64 @@ app.post('/api/search', async (req, res) => {
       email: userEmail,
       action: 'Agreement Search',
     });
+
     // Return all collected results
     res.json({ totalResults: allResults.length, agreementAssetsResults: allResults });
     
   } catch (error) {
-    console.error('Token exchange failed', error);
-    res.status(500).json({ error: 'Token exchange failed' });
+    console.error('Search request failed', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Search request failed' });
   }
 });
+
 app.post('/api/libraryDocuments', async (req, res) => {
-  
   try {
     let allResults = []; // Array to store all results
-    let startIndex = '';  // Start index for pagination
-    let hasNext = true;   // Flag to control the loop
+    let startIndex = ''; // Start index for pagination
+    let hasNext = true;  // Flag to control the loop
+    const apiClient = createApiClient(req);
     while (hasNext) {
-      let libraryDocumentsEndpoint = ADOBE_SIGN_BASE_URL + 'libraryDocuments?showHiddenLibraryDocuments=true&includeSharees=true';
-      
-      if(startIndex !== ''){
-        libraryDocumentsEndpoint = ADOBE_SIGN_BASE_URL + 'libraryDocuments?showHiddenLibraryDocuments=true&includeSharees=true&cursor='+startIndex;
+      let libraryDocumentsEndpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments?showHiddenLibraryDocuments=true&includeSharees=true`;
+      if (startIndex !== '') {
+        libraryDocumentsEndpoint += `&cursor=${startIndex}`;
       }
-      console.log("libraryDocumentsEndpoint----",libraryDocumentsEndpoint);
-      const response = await axios.get(
-        libraryDocumentsEndpoint,
-        {
-          headers: {
-            'Authorization': req.headers['authorization'],  
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    
+      console.log("libraryDocumentsEndpoint----", libraryDocumentsEndpoint);
+
+      const response = await apiClient.get(libraryDocumentsEndpoint, {
+        headers: {
+          'Content-Type': 'application/json', // Authorization is handled by the interceptor
+        },
+      });
+
       console.log("response.data-------------", response.data);
-      allResults = allResults.concat(response.data.libraryDocumentList); 
+      allResults = allResults.concat(response.data.libraryDocumentList);
 
       // Check for next index
       const nextIndex = response.data.page.nextCursor;
-      console.log("response.data.page------",response.data.page);
-      console.log("nextIndex------",nextIndex);
-      hasNext = (nextIndex !== undefined); 
+      console.log("response.data.page------", response.data.page);
+      console.log("nextIndex------", nextIndex);
+      hasNext = (nextIndex !== undefined);
 
       if (hasNext) {
         startIndex = nextIndex; // Update startIndex for the next iteration
       }
+    }
 
-    } 
     // Return all collected results
     res.json({ totalResults: allResults.length, libraryDocuments: allResults });
-    
   } catch (error) {
-    console.error('Token exchange failed', error);
-    res.status(500).json({ error: 'Token exchange failed' });
+    console.error('Error fetching library documents:', error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to fetch library documents' });
   }
 });
+
 app.post('/api/widgets', async (req, res) => {
   
   try {
     let allResults = []; // Array to store all results
     let startIndex = '';  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
+    const apiClient = createApiClient(req);
     while (hasNext) {
       let widgetsEndpoint = ADOBE_SIGN_BASE_URL + 'widgets?showHiddenWidgets=true';
       
@@ -537,7 +600,7 @@ app.post('/api/widgets', async (req, res) => {
         widgetsEndpoint = ADOBE_SIGN_BASE_URL + 'libraryDocuments?showHiddenWidgets=true&cursor='+startIndex;
       }
       console.log("widgetsEndpoint----",widgetsEndpoint);
-      const response = await axios.get(
+      const response = await apiClient.get(
         widgetsEndpoint,
         {
           headers: {
@@ -574,7 +637,7 @@ app.post('/api/widgets-agreements', async (req, res) => {
   try {
     const { ids } = req.body; // Get IDs from the request body
     let allResults = []; // Array to store all results
-
+    const apiClient = createApiClient(req);
     // Fetch agreements for each widget ID
     const files = await Promise.all(
       ids.map(async (id) => {
@@ -590,7 +653,7 @@ app.post('/api/widgets-agreements', async (req, res) => {
 
           console.log("Fetching agreements from:", widgetsEndpoint);
 
-          const response = await axios.get(widgetsEndpoint, {
+          const response = await apiClient.get(widgetsEndpoint, {
             headers: {
               'Authorization': req.headers['authorization'],
               'Content-Type': 'application/json',
@@ -667,7 +730,7 @@ app.post('/api/exchange-token', async (req, res) => {
 
   try {
     const response = await axios.post(
-      process.env.OAUTH_TOKEN_URL,
+      OAUTH_TOKEN_URL,
       querystring.stringify({
         "client_id": CLIENT_ID,
         "client_secret": process.env.client_secret,
@@ -681,7 +744,10 @@ app.post('/api/exchange-token', async (req, res) => {
         },
       }
     );
-    req.session.bearerToken = response.data.access_token;  // Save the token in the session
+    req.session.tokens = {
+      accessToken: response.data.access_token,
+      refreshToken: response.data.refresh_token,
+    };
     const userUrl = ADOBE_SIGN_BASE_URL + 'users/me' ;
     console.log("userUrl--------",userUrl);
     console.log("response.data.access_token--------",response.data.access_token);
@@ -738,7 +804,9 @@ app.post('/api/exchange-token', async (req, res) => {
 app.post('/api/integration-token', async (req, res) => {
   try {
     const integrationKey = process.env.INTEGRATION_KEY;
-    req.session.bearerToken = integrationKey;  // Save the token in the session
+    req.session.tokens = {
+      accessToken: integrationKey,
+    };
     const userUrl = ADOBE_SIGN_BASE_URL + 'users/me' ;
     console.log("userUrl--------",userUrl);
     const userData = await axios.get(userUrl, {
