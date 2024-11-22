@@ -25,7 +25,7 @@ import {
   Button,
   Text ,
 } from "@adobe/react-spectrum";
-import AppLogo from "./logo.svg";
+import AppLogo from "./appLogo.jpg";
 import ChevronLeft from "@spectrum-icons/workflow/ChevronLeft";
 import { useNavigate } from "react-router-dom";
 import { useLocation } from "react-router-dom";

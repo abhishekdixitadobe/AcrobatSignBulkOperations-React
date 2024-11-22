@@ -18,9 +18,7 @@
 import React, { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import Landing from "./views/landing";
-import Result from "./views/result";
 import Upload from "./views/upload";
-import Info from "./views/info";
 import Login from "./views/login";
 import OAuthCallback from "./components/oauth-callback"; // Handle OAuth callback
 import IntegrationCallback from "./components/integrationkey-callback"; // Handle OAuth callback
@@ -98,22 +96,6 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <Upload />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${basename}/result/`}
-        element={
-          <ProtectedRoute>
-            <Result />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path={`${basename}/info/`}
-        element={
-          <ProtectedRoute>
-            <Info />
           </ProtectedRoute>
         }
       />
