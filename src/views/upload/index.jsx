@@ -7,7 +7,6 @@ import UseCaseForm from "../../components/usecase-form";
 import { setRequests, resetProcessApis } from "../../redux/processApis";
 import { resetLogEvents } from "../../redux/logEvent";
 import { setDownloadURLs, resetURLs } from "../../redux/downloadURLs";
-import { agreements } from "../../utils/agreements";
 
 const Upload = () => {
   const location = useLocation();

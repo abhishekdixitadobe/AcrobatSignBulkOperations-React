@@ -9,11 +9,13 @@ const Footer = (props) => {
     disabledBack = false,
     disabledExecute = false,
     executeOnPress = () => {},
+    showDelete = false,
     showDownload = false,
     showDownloadFormField =false,
     showAuditReport =false,
     showDownloadList = false,
     showGetAgreements = false,
+    deleteOnPress = () => {},
     downloadOnPress = () => {},
     downloadList = () => {},
     downloadFormField = () => {},
@@ -85,6 +87,12 @@ const Footer = (props) => {
                 {showAuditReport ? (
                   <Button variant="cta" onPress={downloadAuditReport}>
                     Download Audit Report
+                  </Button>
+                ): ''}
+
+                {showDelete ? (
+                  <Button variant="cta" onPress={deleteOnPress}>
+                    Delete Agreements
                   </Button>
                 ): ''}
               </ButtonGroup>
