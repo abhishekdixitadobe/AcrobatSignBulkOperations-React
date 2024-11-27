@@ -111,7 +111,12 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
           body: JSON.stringify(reqBody),
         }).then(response => {
           if (response.ok) return response.json();
-          else throw new Error(`Failed to fetch for ${email}`);
+          if (response.status === 401) {
+            alert("Session expired. Redirecting to login...");
+            navigate("/login");
+            throw new Error("Unauthorized");
+          } 
+          throw new Error(`Failed to fetch for ${email}`);
         });
       });
   
@@ -170,7 +175,10 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
         
         dispatch(setAgreements(data.agreementAssetsResults));
         navigate("/agreementsList");
-      } else {
+      } else if (response.status === 401) {
+        alert("Session expired. Redirecting to login...");
+        navigate("/login");
+      }  else {
         console.error("API call failed", response.statusText);
         alert("Failed to fetch agreements. Please try again later.");
       }

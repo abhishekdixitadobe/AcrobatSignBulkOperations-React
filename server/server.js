@@ -40,7 +40,18 @@ function createApiClient(req) {
         console.log("Token expired, refreshing...");
 
         try {
-          const refreshToken = req.session.tokens.refreshToken;
+          const { refreshToken } = req.session.tokens || {};
+
+          if (!refreshToken) {
+            console.warn("No refresh token found in session. Redirecting to login...");
+            console.warn("No refresh token found in session.");
+            return Promise.reject({
+              response: {
+                status: 401,
+                data: { message: "Session expired. Please log in again." },
+              },
+            });
+          }
           const newTokens = await refreshTokens(refreshToken);
 
           req.session.tokens = {
@@ -193,8 +204,7 @@ if (initializeDb) {
 // Express Session
 const session = require("express-session");
 const isProduction = true;
-app.use(
-  session({
+app.use(session({
     name: "sessionID",
     secret: "abc", // Use a more secure secret in production!
     resave: false,
@@ -473,23 +483,21 @@ app.post('/api/download-templateDocument', async (req, res) => {
 });
 
 app.post('/api/search', async (req, res) => { 
-  console.log('Inside api/search');
-  const { startDate, endDate, email, selectedStatuses } = req.body; 
-  console.log("Received data: ", startDate, endDate, email);
-  const apiClient = createApiClient(req);
-  const isoStartDate = convertToISO8601(startDate);
-  console.log(isoStartDate);  
-  const isoEndDate = convertToISO8601(endDate);
-  console.log(isoEndDate);  
-
-  const searchEndpoint = ADOBE_SIGN_BASE_URL + 'search';
-  console.log('selectedStatuses---------', selectedStatuses);
-  
+  console.log('Inside api/search');  
   try {
     let allResults = []; // Array to store all results
     let startIndex = 0;  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
-
+    const { startDate, endDate, email, selectedStatuses } = req.body; 
+    console.log("Received data: ", startDate, endDate, email);
+    const apiClient = createApiClient(req);
+    const isoStartDate = convertToISO8601(startDate);
+    console.log(isoStartDate);  
+    const isoEndDate = convertToISO8601(endDate);
+    console.log(isoEndDate);  
+  
+    const searchEndpoint = ADOBE_SIGN_BASE_URL + 'search';
+    console.log('selectedStatuses---------', selectedStatuses);
     while (hasNext) {
       const response = await apiClient.post( 
         searchEndpoint,
@@ -540,8 +548,14 @@ app.post('/api/search', async (req, res) => {
     res.json({ totalResults: allResults.length, agreementAssetsResults: allResults });
     
   } catch (error) {
-    console.error('Search request failed', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Search request failed' });
+    if (error.message === "No refresh token available.") {
+      req.session.destroy((err) => {
+        if (err) console.error("Error destroying session:", err);
+      });
+      return res.redirect('/login'); // Redirect to login if no refresh token
+    }
+    console.error('Search request failed', error);
+    res.status(error.response?.status || 500).json({ error: error });
   }
 });
 
@@ -744,10 +758,14 @@ app.post('/api/exchange-token', async (req, res) => {
         },
       }
     );
+    console.log('refresh_token-----',response.data.refresh_token);
     req.session.tokens = {
       accessToken: response.data.access_token,
       refreshToken: response.data.refresh_token,
     };
+    req.session.save((err) => {
+      if (err) console.error("Session save error:", err);
+    });
     const userUrl = ADOBE_SIGN_BASE_URL + 'users/me' ;
     console.log("userUrl--------",userUrl);
     console.log("response.data.access_token--------",response.data.access_token);
