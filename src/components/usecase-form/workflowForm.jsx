@@ -14,7 +14,7 @@ import { readCSV } from "../../utils/csvHelper";
 const WorkflowForm = ({onChange, setUploadFiles}) => {
     const [startDate, setStartDate] = useState(parseDate("2023-01-03"));
     const [endDate, setEndDate] = useState(parseDate("2023-06-03"));
-    const [email, setEmail] = useState("abhishekdixitg@gmail.com");
+    const [email, setEmail] = useState("");
     const [majorId, setMajorId] = useState(null);
     const [isFilled1, setIsFilled1] = useState(false);
     const [workflows, setWorkflows] = useState([]);

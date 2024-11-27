@@ -14,7 +14,7 @@ import DragAndDrop from "../drag-and-drop";
 const AgreementForm = ({onChange, setUploadFiles}) => {
   const [startDate, setStartDate] = useState(parseDate("2023-01-03"));
   const [endDate, setEndDate] = useState(parseDate("2023-06-03"));
-  const [email, setEmail] = useState("abhishekdixitg@gmail.com");
+  const [email, setEmail] = useState("");
   let [selectedKeys, setSelectedKeys] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -246,29 +246,31 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
             </Flex>
           </DisclosurePanel>
       </Disclosure>
-      <Disclosure id="agreementIdSearch">
-        <DisclosureHeader>Agreement ID Search</DisclosureHeader>
-          <DisclosurePanel>
-              <Flex direction="column" gap="size-200">
-              <DragAndDrop
-                  heading="Upload agreement Ids list"
-                  description="Or, select single CSV file from your computer"
-                  acceptedFileTypes={["text/csv"]}
-                  onImageDrop={(files) => {
-                    setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-                  }}
-                  setUploadFiles={setUploadFiles}
-                />
-                <AgreementAction
-                  params={{ startDate, endDate, email }}
-                  onAction={handleApiCall}
-                  buttonText="Get Agreements"
-                  isDisabled={!email}
-                  heading="Agreements"
-                />
-              </Flex>
-          </DisclosurePanel>
-      </Disclosure>
+      {/*
+        <Disclosure id="agreementIdSearch">
+          <DisclosureHeader>Agreement ID Search</DisclosureHeader>
+            <DisclosurePanel>
+                <Flex direction="column" gap="size-200">
+                <DragAndDrop
+                    heading="Upload agreement Ids list"
+                    description="Or, select single CSV file from your computer"
+                    acceptedFileTypes={["text/csv"]}
+                    onImageDrop={(files) => {
+                      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
+                    }}
+                    setUploadFiles={setUploadFiles}
+                  />
+                  <AgreementAction
+                    params={{ startDate, endDate, email }}
+                    onAction={handleApiCall}
+                    buttonText="Get Agreements"
+                    isDisabled={!email}
+                    heading="Agreements"
+                  />
+                </Flex>
+            </DisclosurePanel>
+        </Disclosure> 
+      */}
     </Accordion>
 );
 };
