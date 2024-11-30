@@ -1,4 +1,5 @@
 const express = require("express");
+const helmet = require('helmet');
 const bodyParser = require("body-parser");
 const csv = require("csv-parser");
 const app = express();
@@ -17,9 +18,13 @@ const application_domain = process.env.application_host || 'localhost';
 const winston = require('winston');
 const { createLogger, format, transports } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
+const compression = require('compression');
+app.use(compression());
 
 const REGEX_PATTERN = /^[^<>:"/\\|?*]*$/;
 
+app.use(helmet());
+app.disable('x-powered-by');
 
 const CLIENT_ID = process.env.CLIENT_ID; 
 const REDIRECT_URI = process.env.REDIRECT_URI; 
