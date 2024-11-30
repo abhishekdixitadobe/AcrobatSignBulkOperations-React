@@ -12,7 +12,7 @@ import {
   Heading,
 } from "@adobe/react-spectrum";
 import Footer from "../../components/footer";
-import { downloadFilesAsZip } from "../../services/apiService";
+import { downloadFilesAsZip, downloadList } from "../../services/apiService";
 
 const AgreementsPage = () => {
   const agreements = useSelector((state) => state.agreements || []);
@@ -26,6 +26,14 @@ const AgreementsPage = () => {
     { name: "Status", uid: "status" },
   ];
 
+  const handleDownloadList = async (fileName) => {
+    const idsToDownload =
+      selectedKeys === "all"
+        ? agreements.map((agreement) => agreement.id)
+        : Array.from(selectedKeys);
+
+    await downloadList(idsToDownload, agreements, fileName);
+  };
   const handleDownload = async (endpoint, fileName) => {
     const idsToDownload =
       selectedKeys === "all"
@@ -78,9 +86,13 @@ const AgreementsPage = () => {
       <View gridArea="footer" width="100%" height={"size-1000"}>
         <Footer
           showDownload={true}
+          showDownloadList={true}
           showDownloadFormField={true}
           showAuditReport={true}
           showDelete={showDeleteButton}
+          downloadList={async () => {
+            handleDownloadList("", "agreementsList.zip")
+          }}
           downloadOnPress={async () =>
             handleDownload("/api/download-agreements", "agreements.zip")
           }

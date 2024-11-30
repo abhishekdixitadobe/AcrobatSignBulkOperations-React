@@ -55,3 +55,35 @@ export const downloadFilesAsZip = async (endpoint, ids, token, fileName) => {
     alert("Download failed. Please try again.");
   }
 };
+
+export const downloadList = async (ids, agreements, fileName) => {
+  if (ids.length === 0) {
+    alert("No items selected for download.");
+    return;
+  }
+
+  try {
+    const zip = new JSZip();
+
+     // Filter selected widgets based on selected keys
+     const selectedAgreements = agreements.filter(agreement => agreement && ids.includes(agreement.id));
+
+     // Convert selected widgets to CSV format
+     let csvContent = "ID,Agreement Name,Status\n";
+     selectedAgreements.forEach(agreement => {
+       csvContent += `${agreement.id},${agreement.name},${agreement.status}\n`;
+     });
+
+     // Add CSV content to the ZIP file
+     zip.file("selected_agreements.csv", csvContent);
+
+     // Generate the ZIP file and trigger download
+     const blob = await zip.generateAsync({ type: "blob" });
+     saveAs(blob, "selected_agreements.zip");
+
+
+  } catch (error) {
+    console.error("Download failed:", error);
+    alert("Failed to download agreements documents. Please try again.");
+  }
+};

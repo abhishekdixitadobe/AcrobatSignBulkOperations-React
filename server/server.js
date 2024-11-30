@@ -32,35 +32,33 @@ const OAUTH_REFRESH_TOKEN_URL = process.env.BASE_URL +'/oauth/v2/refresh';
 
 function createApiClient(req) {
   const client = axios.create();
-  
   client.interceptors.response.use(
     (response) => response,
     async (error) => {
       if (error.response && error.response.status === 401) {
         console.log("Token expired, refreshing...");
 
+        const { refreshToken } = req.session.tokens || {};
+        if (!refreshToken) {
+          console.warn("No refresh token found in session. Redirecting to login...");
+          return Promise.reject({
+            response: {
+              status: 401,
+              data: { message: "Session expired. Please log in again." },
+            },
+          });
+        }
+
         try {
-          const { refreshToken } = req.session.tokens || {};
-
-          if (!refreshToken) {
-            console.warn("No refresh token found in session. Redirecting to login...");
-            console.warn("No refresh token found in session.");
-            return Promise.reject({
-              response: {
-                status: 401,
-                data: { message: "Session expired. Please log in again." },
-              },
-            });
-          }
           const newTokens = await refreshTokens(refreshToken);
-
           req.session.tokens = {
             accessToken: newTokens.accessToken,
-            refreshToken: newTokens.refreshToken,
+            accessTokenExpiry: Date.now() + newTokens.expires_in * 1000,
           };
+          req.session.save();
 
           error.config.headers["Authorization"] = `Bearer ${newTokens.accessToken}`;
-          return client.request(error.config);
+          return client.request(error.config); // Retry original request
         } catch (refreshError) {
           console.error("Error refreshing tokens:", refreshError.message);
           return Promise.reject(refreshError);
@@ -73,6 +71,7 @@ function createApiClient(req) {
 
   return client;
 }
+
 
 
 async function refreshTokens(refreshToken) {
@@ -91,10 +90,9 @@ async function refreshTokens(refreshToken) {
         },
       }
     );
-
+    console.log("refreshTokens---response---",response);
     return {
-      accessToken: response.data.access_token,
-      refreshToken: response.data.refresh_token,
+      accessToken: response.data.access_token
     };
   } catch (error) {
     console.error("Error refreshing tokens", error);
@@ -221,8 +219,9 @@ app.use(session({
 const { log, clearLog } = require("./logging/logger");
 const logRoute = require("./logging/logRoute");
 app.use((req, res, next) => {
-  req.session.tokens = req.session.tokens || {}; // Ensure tokens are initialized
-  console.log(`Received request for: ${req.url}`);
+  if (req.session) {
+    req.session.cookie.expires = new Date(Date.now() + 1000 * 60 * 60 * 24); // Extend session expiration
+  }
   next();
 });
 /*
@@ -269,6 +268,27 @@ function convertToISO8601(dateObj) {
   return dateObj;
 }
 
+async function checkSession(req, res){
+  if (!req.session.tokens || !req.session.tokens.accessToken) {
+    return res.status(401).json({ message: "Session expired. Please log in again." });
+  }
+
+  const isTokenExpired = (req) => {
+    const { accessTokenExpiry } = req.session.tokens || {};
+    return !accessTokenExpiry || Date.now() >= accessTokenExpiry;
+  };
+
+  if (isTokenExpired(req)) {
+    console.log("Access token expired, refreshing before starting...");
+    const newTokens = await refreshTokens(req.session.tokens.refreshToken);
+    req.session.tokens = {
+      accessToken: newTokens.accessToken,
+      refreshToken: req.session.tokens.refreshToken,
+      accessTokenExpiry: Date.now() + newTokens.expires_in * 1000,
+    };
+    req.session.save();
+  }
+}
 app.post('/api/download-auditReport', async (req, res) => {
 
   const { ids } = req.body;
@@ -484,78 +504,71 @@ app.post('/api/download-templateDocument', async (req, res) => {
 
 app.post('/api/search', async (req, res) => { 
   console.log('Inside api/search');  
+
   try {
-    let allResults = []; // Array to store all results
-    let startIndex = 0;  // Start index for pagination
-    let hasNext = true;   // Flag to control the loop
-    const { startDate, endDate, email, selectedStatuses } = req.body; 
-    console.log("Received data: ", startDate, endDate, email);
-    const apiClient = createApiClient(req);
+    
+    await checkSession(req, res);
+
+    let allResults = [];
+    let startIndex = 0;
+    let hasNext = true;
+    const { startDate, endDate, email, selectedStatuses } = req.body;
     const isoStartDate = convertToISO8601(startDate);
-    console.log(isoStartDate);  
     const isoEndDate = convertToISO8601(endDate);
-    console.log(isoEndDate);  
-  
     const searchEndpoint = ADOBE_SIGN_BASE_URL + 'search';
-    console.log('selectedStatuses---------', selectedStatuses);
+
+    const apiClient = createApiClient(req);
+
     while (hasNext) {
-      const response = await apiClient.post( 
-        searchEndpoint,
-        {
-          scope: ["AGREEMENT_ASSETS"],
-          agreementAssetsCriteria: {
-            modifiedDate: {
-              range: {
-                gt: isoStartDate,  
-                lt: isoEndDate,
+      console.log("Session tokens at iteration:", JSON.stringify(req.session.tokens));
+      try {
+        const response = await apiClient.post(
+          searchEndpoint,
+          {
+            scope: ["AGREEMENT_ASSETS"],
+            agreementAssetsCriteria: {
+              modifiedDate: {
+                range: { gt: isoStartDate, lt: isoEndDate },
               },
+              pageSize: 50,
+              startIndex: startIndex,
+              status: selectedStatuses,
+              type: ["AGREEMENT"],
+              visibility: "SHOW_ALL",
             },
-            pageSize: 50,
-            startIndex: startIndex, // Use the current startIndex
-            status: selectedStatuses,  
-            type: ["AGREEMENT"],
-            visibility: "SHOW_ALL",
           },
-        },
-        {
-          headers: {
-            'x-api-user': `email:${email}` // Authorization header handled by interceptor
-          },
+          {
+            headers: {
+              'x-api-user': `email:${email}`,
+              'Authorization': `Bearer ${req.session.tokens.accessToken}`
+            },
+          }
+        );
+
+        allResults = allResults.concat(response.data.agreementAssetsResults.agreementAssetsResultList);
+        const nextIndex = response.data.agreementAssetsResults.searchPageInfo.nextIndex;
+        hasNext = nextIndex !== null;
+
+        if (hasNext) {
+          startIndex = nextIndex;
         }
-      );
-
-      console.log("response.data-------------", response.data);
-      allResults = allResults.concat(response.data.agreementAssetsResults.agreementAssetsResultList); // Collect results
-
-      // Check for next index
-      const nextIndex = response.data.agreementAssetsResults.searchPageInfo.nextIndex;
-      hasNext = nextIndex !== null; // Continue if nextIndex is not null
-
-      if (hasNext) {
-        startIndex = nextIndex; // Update startIndex for the next iteration
+      } catch (error) {
+        if (error.response?.status === 401) {
+          console.error("Token expired and could not be refreshed.");
+          break;
+        }
+        throw error;
       }
     }
 
     const userId = req.session.userId;
     const userEmail = req.session.userEmail;
-    logger.info('User Activity', {
-      userId: userId,
-      email: userEmail,
-      action: 'Agreement Search',
-    });
+    logger.info('User Activity', { userId, email: userEmail, action: 'Agreement Search' });
 
-    // Return all collected results
     res.json({ totalResults: allResults.length, agreementAssetsResults: allResults });
-    
   } catch (error) {
-    if (error.message === "No refresh token available.") {
-      req.session.destroy((err) => {
-        if (err) console.error("Error destroying session:", err);
-      });
-      return res.redirect('/login'); // Redirect to login if no refresh token
-    }
     console.error('Search request failed', error);
-    res.status(error.response?.status || 500).json({ error: error });
+    res.status(error.response?.status || 500).json({ error: error.message });
   }
 });
 
@@ -564,6 +577,7 @@ app.post('/api/libraryDocuments', async (req, res) => {
     let allResults = []; // Array to store all results
     let startIndex = ''; // Start index for pagination
     let hasNext = true;  // Flag to control the loop
+    await checkSession(req, res);
     const apiClient = createApiClient(req);
     while (hasNext) {
       let libraryDocumentsEndpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments?showHiddenLibraryDocuments=true&includeSharees=true`;
@@ -574,7 +588,8 @@ app.post('/api/libraryDocuments', async (req, res) => {
 
       const response = await apiClient.get(libraryDocumentsEndpoint, {
         headers: {
-          'Content-Type': 'application/json', // Authorization is handled by the interceptor
+          'Content-Type': 'application/json', 
+          'Authorization': `Bearer ${req.session.tokens.accessToken}`
         },
       });
 
@@ -606,6 +621,7 @@ app.post('/api/widgets', async (req, res) => {
     let allResults = []; // Array to store all results
     let startIndex = '';  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
+    
     const apiClient = createApiClient(req);
     while (hasNext) {
       let widgetsEndpoint = ADOBE_SIGN_BASE_URL + 'widgets?showHiddenWidgets=true';
@@ -875,6 +891,14 @@ app.post('/api/integration-token', async (req, res) => {
     res.status(500).json({ error: 'Token exchange failed' });
   }
 });
+
+function requireSession(req, res, next) {
+  if (!req.session || !req.session.tokens) {
+    return res.status(401).json({ error: "Session expired. Please log in." });
+  }
+  next();
+}
+app.use("/api", requireSession);
 
 // Start the server
 const server = https.createServer(options, app);

@@ -75,7 +75,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   
   
   const handleBulkUserAgreements = async (params) => {
-    const { startDate, endDate } = params;
+    const { startDate, endDate, selectedStatuses } = params;
 
     // Ensure file upload exists
     /*if (!isFilled1) {
@@ -100,6 +100,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
           startDate: formatToISO(startDate),
           endDate: formatToISO(endDate),
           email,
+          selectedStatuses
         };
         
         return fetch(apiUrl, {
@@ -189,7 +190,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
       setIsLoading(false);
     }
   };
-
+  const isButtonEnabled = selectedFiles.length > 0 && selectedStatuses.size > 0;
   return (
     <Accordion>
       <Disclosure id="userAgreementLookup">
@@ -233,8 +234,20 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
               <Flex direction="row" gap="size-200">
                 <DatePicker label="Start Date" value={startDate} onChange={setStartDate} />
                 <DatePicker label="End Date" value={endDate} onChange={setEndDate} />
-                
+                <ComboBox label="Select Statuses" onSelectionChange={() => {}}>
+                  {agreementStatusOptions.map((option) => (
+                    <Item key={option.id} textValue={option.name}>
+                      <Checkbox
+                        isSelected={selectedStatuses.has(option.id)}
+                        onChange={() => toggleStatus(option.id)}
+                      >
+                        {option.name}
+                      </Checkbox>
+                    </Item>
+                  ))}
+                </ComboBox>
               </Flex>
+
               <DragAndDrop
                 heading="Upload active users list"
                 description="Or, select single CSV file from your computer"
@@ -245,10 +258,10 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
                 setUploadFiles={setUploadFiles}
               />
               <AgreementAction
-                  params={{ startDate, endDate, email }}
+                  params={{ startDate, endDate, email, selectedStatuses: Array.from(selectedStatuses)}}
                   onAction={handleBulkUserAgreements}
                   buttonText="Get Agreements"
-                  isDisabled={!email}
+                  isDisabled={!isButtonEnabled}
                   heading="Agreements"
                 />
             </Flex>
