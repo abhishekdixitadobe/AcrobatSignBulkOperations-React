@@ -13,29 +13,13 @@ const Login = () => {
 
     const [authUrl, setAuthUrl] = useState('');
 
-    useEffect(() => {
-      // Fetch the OAuth URL from the backend using POST
-      fetch('/api/auth-url', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/json', // Specify JSON content type
-          },
-          body: JSON.stringify({ requestType: 'oauth' }) // Optional request body
-      })
-          .then(response => {
-              if (!response.ok) {
-                  throw new Error(`HTTP error! Status: ${response.status}`);
-              }
-              return response.json();
-          })
-          .then(data => setAuthUrl(data.url))
-          .catch(error => console.error('Error fetching auth URL:', error));
-  }, []);
-
     const handleLogin = () => {
-      if (authUrl) {
-        window.location.href = authUrl; // Redirect the user to the OAuth URL
-      }
+        try {
+          window.location.href = "/api/auth-url"; // Redirect to a validated URL
+        } catch (error) {
+          console.error("Invalid URL provided for redirection:", error);
+          alert("An error occurred. Please try again.");
+        }
      // window.location.href = AUTH_URL;
     };
     const handleIntegrationLogin = () => {

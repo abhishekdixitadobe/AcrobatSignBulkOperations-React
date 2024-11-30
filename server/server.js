@@ -137,12 +137,6 @@ const STATIC_ASSETS_PATH = path.resolve(__dirname, "../static");
 
 app.use(express.static(STATIC_ASSETS_PATH));
 
-
-// Swagger UI
-const swaggerDocs = require("./config/swaggerConfig");
-const swaggerUI = require("swagger-ui-express");
-app.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocs));
-
 let db; // Variable to hold the database connection
 
 
@@ -247,7 +241,16 @@ app.get("/api/session", (req, res) => {
   req.logger.log("info", "Initializing...");
   res.send({ sessionID: req.sessionID });
 });
-
+app.get('/api/auth-url', (req, res) => {
+  console.log('inside /auth-url---------------');
+  console.log('SCOPE',SCOPE);
+  console.log('AUTH_BASE_URL',AUTH_BASE_URL);
+  const state = req.query.state || ''; // Optional: Pass state parameter for CSRF protection
+  const scope = SCOPE; // Define required scopes
+  const authUrl = `${AUTH_BASE_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
+  
+  res.redirect(authUrl);
+});
 app.get("*", (req, res) => {
   res.sendFile(path.join(STATIC_ASSETS_PATH, "index.html"));
 });
@@ -741,16 +744,6 @@ app.post('/api/workflows', async (req, res) => {
     res.status(500).json({ error: 'Token exchange failed' });
   }
 });
-app.post('/api/auth-url', (req, res) => {
-  console.log('inside /auth-url---------------');
-  console.log('SCOPE',SCOPE);
-  console.log('AUTH_BASE_URL',AUTH_BASE_URL);
-  const state = req.query.state || ''; // Optional: Pass state parameter for CSRF protection
-  const scope = req.query.scope || 'default_scope'; // Define required scopes
-  const authUrl = `${AUTH_BASE_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
-  res.json({ url: authUrl });
-});
-
 app.post('/api/exchange-token', async (req, res) => {
   console.log("inside -/api/exchange-token-----");
   const { authCode } = req.body;
@@ -893,6 +886,9 @@ app.post('/api/integration-token', async (req, res) => {
 });
 
 function requireSession(req, res, next) {
+  if (req.path === "/auth-url") {
+    return next();
+  }
   if (!req.session || !req.session.tokens) {
     return res.status(401).json({ error: "Session expired. Please log in." });
   }
