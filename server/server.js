@@ -1,5 +1,6 @@
 const express = require("express");
 const helmet = require('helmet');
+const expressRateLimit = require("express-rate-limit");
 const bodyParser = require("body-parser");
 const csv = require("csv-parser");
 const app = express();
@@ -256,10 +257,19 @@ app.get('/api/auth-url', (req, res) => {
   
   res.redirect(authUrl);
 });
+
+// Rate limit configuration for the /callback route
+const rateLimiter = expressRateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `windowMs`
+  message: "Too many requests from this IP, please try again later.",
+  headers: true,
+});
+
 app.get("*", (req, res) => {
   res.sendFile(path.join(STATIC_ASSETS_PATH, "index.html"));
 });
-
+app.use("/callback", rateLimiter);
 // Define the /callback route
 app.get('/callback', (req, res) => {
   res.sendFile(path.join(STATIC_ASSETS_PATH, "index.html")); // Serve your main HTML file
