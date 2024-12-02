@@ -29,7 +29,11 @@ const Callback = () => {
         body: JSON.stringify({ authCode }),
       });
       const data = await response.json();
-      
+      if (response.status === 500 && data.error === 'User is not part of the allowed groups') {
+        alert('You are not part of the allowed groups. Access denied.');
+        navigate('/login');
+        return; // Stop further execution
+      }
       if (data.authData.access_token) {
         dispatch(login({ token: data.authData.access_token, user: data.userData }));
         navigate('/'); // Redirect to home page

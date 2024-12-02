@@ -817,7 +817,7 @@ app.post('/api/exchange-token', async (req, res) => {
 
 
     if (!validateGroups(userGroupData.data.groupInfoList, allowedGroups)) {
-      res.status(500).json({ error: 'User is not part of the allowed groups' });
+      return res.status(500).json({ error: 'User is not part of the allowed groups' });
     } 
     
   
