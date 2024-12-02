@@ -1,6 +1,5 @@
 const express = require("express");
 const helmet = require('helmet');
-const expressRateLimit = require("express-rate-limit");
 const bodyParser = require("body-parser");
 const csv = require("csv-parser");
 const app = express();
@@ -20,7 +19,6 @@ const winston = require('winston');
 const { createLogger, format, transports } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const compression = require('compression');
-app.use(compression());
 
 const REGEX_PATTERN = /^[^<>:"/\\|?*]*$/;
 
@@ -257,19 +255,10 @@ app.get('/api/auth-url', (req, res) => {
   
   res.redirect(authUrl);
 });
-
-// Rate limit configuration for the /callback route
-const rateLimiter = expressRateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `windowMs`
-  message: "Too many requests from this IP, please try again later.",
-  headers: true,
-});
-
 app.get("*", (req, res) => {
   res.sendFile(path.join(STATIC_ASSETS_PATH, "index.html"));
 });
-app.use("/callback", rateLimiter);
+
 // Define the /callback route
 app.get('/callback', (req, res) => {
   res.sendFile(path.join(STATIC_ASSETS_PATH, "index.html")); // Serve your main HTML file
@@ -759,6 +748,19 @@ app.post('/api/workflows', async (req, res) => {
     res.status(500).json({ error: 'Token exchange failed' });
   }
 });
+function validateGroups(groupInfoList, namesToCheck) {
+  if (!namesToCheck || namesToCheck.length === 0) {
+    console.log("No names provided, allowing all.");
+    return true; // Allow all if no names are specified
+  }
+   // Ensure namesToCheck is always an array
+   const namesArray = Array.isArray(namesToCheck) ? namesToCheck : [namesToCheck];
+
+   // Check if any name in namesArray exists in groupInfoList
+   return namesArray.some(nameToCheck =>
+     groupInfoList.some(group => group.name === nameToCheck)
+   );
+}
 app.post('/api/exchange-token', async (req, res) => {
   console.log("inside -/api/exchange-token-----");
   const { authCode } = req.body;
@@ -799,6 +801,26 @@ app.post('/api/exchange-token', async (req, res) => {
         },
       }
     );
+
+    //check group details
+    const userGroupsUrl = ADOBE_SIGN_BASE_URL + 'users/me/groups' ;
+    console.log("userGroupsUrl--------",userGroupsUrl);
+    const userGroupData = await axios.get(userGroupsUrl, {
+        headers: {
+          'Authorization': 'Bearer '+response.data.access_token,
+        },
+      }
+    );
+    console.log("userGroupData-------", userGroupData.data);
+    const allowedName = process.env.ALLOWED_GROUP_NAME;
+    const allowedGroups = allowedName ? allowedName.split(',').map(name => name.trim()) : []; // Split even for a single name
+
+
+    if (!validateGroups(userGroupData.data.groupInfoList, allowedGroups)) {
+      res.status(500).json({ error: 'User is not part of the allowed groups' });
+    } 
+    
+  
     // Send the access token back to the client
     console.log("response.data---------",response.data);
     console.log("userData.data---------",userData.data);
