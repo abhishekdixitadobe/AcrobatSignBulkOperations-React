@@ -5,71 +5,91 @@ import { apiBodybyID } from "../utils/apiBody";
 // Async action to process APIs
 export const process = createAsyncThunk("apis/process", async (_, thunkAPI) => {
   console.log(thunkAPI.getState());
-  const apiRequests = thunkAPI.getState().processApis.requests;
 
-  const requests = apiRequests.map(async (apiRequest) => {
-    const bodygenfunc = apiBodybyID(apiRequest.apiEndpoint);
-    const body = await bodygenfunc(apiRequest.body);
-    return fetch(apiRequest.apiEndpoint, {
-      method: apiRequest.method,
-      body: body,
-      //headers: { "Content-Type": "multipart/form-data" },
-    })
-      .then((response) => {
-        const reader = response.body.getReader();
-        return new ReadableStream({
-          start(controller) {
-            function push() {
-              reader.read().then(({ done, value }) => {
-                if (done) {
-                  controller.close();
-                  return;
-                }
-                controller.enqueue(value);
-                push();
-              });
+  const state = thunkAPI.getState();
+  const apiRequests = state.processApis.requests;
+
+  // Helper function to fetch and process response
+  const fetchAndProcessResponse = async (apiRequest, thunkAPI) => {
+    try {
+      const bodyGeneratorFunc = apiBodybyID(apiRequest.apiEndpoint);
+      const body = await bodyGeneratorFunc(apiRequest.body);
+
+      const response = await fetch(apiRequest.apiEndpoint, {
+        method: apiRequest.method,
+        body: body,
+        //headers: { "Content-Type": "multipart/form-data" },
+      });
+
+      const stream = createReadableStream(response.body.getReader());
+      await processStream(stream, thunkAPI);
+    } catch (error) {
+      return thunkAPI.rejectWithValue({ error: error.message });
+    }
+  };
+
+  // Helper function to create a readable stream
+  const createReadableStream = (reader) => {
+    return new ReadableStream({
+      start(controller) {
+        function push() {
+          reader.read().then(({ done, value }) => {
+            if (done) {
+              controller.close();
+              return;
             }
+            controller.enqueue(value);
             push();
-          },
-        });
-      })
-      .then((stream) => {
-        // Handle the stream here
-        const reader = stream.getReader();
-        return reader.read().then(function process({ done, value }) {
-          if (done) {
-            return;
-          }
-          // Convert the chunk into a string and parse it as JSON
-          const result = JSON.parse(new TextDecoder("utf-8").decode(value));
-          // Dispatch the action to add the result to the state
-          if (result) {
-            if (Array.isArray(result.responseData)) {
-              thunkAPI.dispatch(
-                processApis.actions.addResults(result.responseData)
-              );
-            } else {
-              thunkAPI.dispatch(
-                processApis.actions.addResult(result.responseData)
-              );
-            }
-            thunkAPI.dispatch(processApis.actions.addApiAudit(result.APIAudit));
-            thunkAPI.dispatch(
-              processApis.actions.setCurrentCount(result.currentCount)
-            );
-            thunkAPI.dispatch(
-              processApis.actions.setTotalCount(result.totalCount)
-            );
-          }
-          return reader.read().then(process);
-        });
-      })
-      .catch((error) => thunkAPI.rejectWithValue({ error: error.message }));
-  });
+          });
+        }
+        push();
+      },
+    });
+  };
+
+  // Helper function to process the readable stream
+  const processStream = async (stream, thunkAPI) => {
+    const reader = stream.getReader();
+
+    async function process({ done, value }) {
+      if (done) return;
+
+      const result = JSON.parse(new TextDecoder("utf-8").decode(value));
+      dispatchResult(result, thunkAPI);
+
+      // Continue reading the stream
+      const nextChunk = await reader.read();
+      await process(nextChunk);
+    }
+
+    const firstChunk = await reader.read();
+    await process(firstChunk);
+  };
+
+  // Helper function to dispatch results to the state
+  const dispatchResult = (result, thunkAPI) => {
+    if (!result) return;
+
+    if (Array.isArray(result.responseData)) {
+      thunkAPI.dispatch(processApis.actions.addResults(result.responseData));
+    } else {
+      thunkAPI.dispatch(processApis.actions.addResult(result.responseData));
+    }
+
+    thunkAPI.dispatch(processApis.actions.addApiAudit(result.APIAudit));
+    thunkAPI.dispatch(processApis.actions.setCurrentCount(result.currentCount));
+    thunkAPI.dispatch(processApis.actions.setTotalCount(result.totalCount));
+  };
+
+  // Execute all API requests
+  const requests = apiRequests.map((apiRequest) =>
+    fetchAndProcessResponse(apiRequest, thunkAPI)
+  );
 
   const results = await Promise.all(requests);
   return results;
 });
+
 
 // Slice
 const processApis = createSlice({

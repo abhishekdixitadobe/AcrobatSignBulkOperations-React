@@ -222,23 +222,6 @@ app.use((req, res, next) => {
   }
   next();
 });
-/*
-app.use(logRoute);
-
-// Middleware to add a logger to the request object
-app.use((req, res, next) => {
-  const sessionId = req.sessionID;
-  req.logger = {
-    log: (level, message) => {
-      log(sessionId, level, message);
-    },
-    clear: () => {
-      clearLog(sessionId);
-    },
-  };
-  next();
-});
-*/
 
 // get sessionID
 app.get("/api/session", (req, res) => {
@@ -249,8 +232,6 @@ app.get('/api/auth-url', (req, res) => {
   console.log('inside /auth-url---------------');
   console.log('SCOPE',SCOPE);
   console.log('AUTH_BASE_URL',AUTH_BASE_URL);
-  const state = req.query.state || ''; // Optional: Pass state parameter for CSRF protection
-  const scope = SCOPE; // Define required scopes
   const authUrl = `${AUTH_BASE_URL}?response_type=code&client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=${SCOPE}`;
   
   res.redirect(authUrl);
@@ -267,11 +248,11 @@ function convertToISO8601(dateObj) {
   const { year, month, day } = dateObj;
 
   // JavaScript's Date uses a 0-based index for months (0 = January, 11 = December)
-  const date = new Date(year, month - 1, day);
+  //const date = new Date(year, month - 1, day);
 
   // Convert to ISO-8601 string (format: YYYY-MM-DDTHH:mm:ss.sssZ)
   //const isoDateString = date.toISOString();
-  console.log("date::::::::",dateObj);
+  //console.log("date::::::::",dateObj);
   return dateObj;
 }
 
@@ -302,7 +283,7 @@ app.post('/api/download-auditReport', async (req, res) => {
   const zip = new JSZip();
   const apiClient = createApiClient(req);
   try {
-    const files = await Promise.all(
+    await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}agreements/${id}/auditTrail`;
         console.log("download audit report endpoint::",endpoint);
@@ -347,7 +328,7 @@ app.post('/api/download-formfields', async (req, res) => {
   const zip = new JSZip();
   const apiClient = createApiClient(req);
   try {
-    const files = await Promise.all(
+    await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}agreements/${id}/formData`;
         console.log("download formfields endpoint::",endpoint);
@@ -392,7 +373,7 @@ app.post('/api/download-agreements', async (req, res) => {
     const zip = new JSZip();
     const apiClient = createApiClient(req);
     try {
-      const files = await Promise.all(
+      await Promise.all(
         ids.map(async (id) => {
           const endpoint = `${ADOBE_SIGN_BASE_URL}agreements/${id}/combinedDocument`;
           console.log("download endpoint::",endpoint);
@@ -437,7 +418,7 @@ app.post('/api/download-templateFormfields', async (req, res) => {
   const zip = new JSZip();
   const apiClient = createApiClient(req);
   try {
-    const files = await Promise.all(
+    await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/formData`;
         console.log("template download formfields endpoint::",endpoint);
@@ -476,7 +457,7 @@ app.post('/api/download-templateDocument', async (req, res) => {
   const zip = new JSZip();
   const apiClient = createApiClient(req);
   try {
-    const files = await Promise.all(
+    await Promise.all(
       ids.map(async (id) => {
         const endpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/combinedDocument`;
         console.log("template download endpoint::",endpoint);

@@ -91,7 +91,7 @@ const AgreementsPage = () => {
           showAuditReport={true}
           showDelete={showDeleteButton}
           downloadList={async () => {
-            handleDownloadList("", "agreementsList.zip")
+            handleDownloadList("agreementsList.zip")
           }}
           downloadOnPress={async () =>
             handleDownload("/api/download-agreements", "agreements.zip")
