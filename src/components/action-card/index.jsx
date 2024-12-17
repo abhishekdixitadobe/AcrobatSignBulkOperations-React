@@ -35,10 +35,8 @@ const ActionCard = ({
   const dispatch = useDispatch();
 
   const handleNavigation = () => {
-    // navigate(configs.page, { state: { configs } });
     dispatch(setAPI(configs.api));
     dispatch(setLandingPage(false));
-    //navigate("/info", { state: { heading: heading, configs: configs } });
     navigate(configs.page, { state: { heading, configs } });
   };
 

@@ -248,8 +248,6 @@ app.get('/callback', (req, res) => {
   res.sendFile(path.join(STATIC_ASSETS_PATH, "index.html")); // Serve your main HTML file
 });
 function convertToISO8601(dateObj) {
-  const { year, month, day } = dateObj;
-
   // JavaScript's Date uses a 0-based index for months (0 = January, 11 = December)
   //const date = new Date(year, month - 1, day);
 
@@ -260,7 +258,7 @@ function convertToISO8601(dateObj) {
 }
 
 async function checkSession(req, res){
-  if (!req.session.tokens || !req.session.tokens.accessToken) {
+  if (!req.session?.tokens?.accessToken) {
     return res.status(401).json({ message: "Session expired. Please log in again." });
   }
 
@@ -671,7 +669,7 @@ app.post('/api/widgets-agreements', async (req, res) => {
     let allResults = []; // Array to store all results
     const apiClient = createApiClient(req);
     // Fetch agreements for each widget ID
-    const files = await Promise.all(
+    await Promise.all(
       ids.map(async (id) => {
         let hasNext = true;
         let startIndex = '';
@@ -932,7 +930,7 @@ function requireSession(req, res, next) {
   if (req.path === "/auth-url") {
     return next();
   }
-  if (!req.session || !req.session.tokens) {
+  if (!req.session?.tokens?.accessToken) {
     return res.status(401).json({ error: "Session expired. Please log in." });
   }
   next();
