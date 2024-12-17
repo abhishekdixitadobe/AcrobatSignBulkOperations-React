@@ -28,21 +28,21 @@ export const process = createAsyncThunk("apis/process", async (_, thunkAPI) => {
     }
   };
 
-  // Helper function to create a readable stream
   const createReadableStream = (reader) => {
+    const handleRead = (reader, controller) => {
+      reader.read().then(({ done, value }) => {
+        if (done) {
+          controller.close();
+        } else {
+          controller.enqueue(value);
+          handleRead(reader, controller);
+        }
+      });
+    };
+  
     return new ReadableStream({
       start(controller) {
-        function push() {
-          reader.read().then(({ done, value }) => {
-            if (done) {
-              controller.close();
-              return;
-            }
-            controller.enqueue(value);
-            push();
-          });
-        }
-        push();
+        handleRead(reader, controller);
       },
     });
   };
