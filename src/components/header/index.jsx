@@ -23,14 +23,11 @@ import {
   Image,
   Heading,
   Button,
-  Text ,
 } from "@adobe/react-spectrum";
 import AppLogo from "./appLogo.jpg";
 import ChevronLeft from "@spectrum-icons/workflow/ChevronLeft";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { useSelector } from 'react-redux';
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { logout } from '../../services/authService'
 
 const Header = () => {
@@ -45,7 +42,7 @@ const Header = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (location.state && location.state.configs) {
+    if (location.state?.configs) {
       setIsLandingPage(true);
     } else {
       setIsLandingPage(false);

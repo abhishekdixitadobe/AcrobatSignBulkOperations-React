@@ -16,11 +16,9 @@ const port = process.env.application_port || 3003;
 const JSZip = require('jszip');
 const application_domain = process.env.application_host || 'localhost';
 const winston = require('winston');
-const { createLogger, format, transports } = require('winston');
+const { format } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
-const compression = require('compression');
 
-const REGEX_PATTERN = /^[^<>:"/\\|?*]*$/;
 const { URL, URLSearchParams } = require('url');
 app.use(helmet());
 app.disable('x-powered-by');
@@ -132,9 +130,15 @@ const options = {
 };
 
 // Define the storage for uploaded files
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const multer = require("multer");
 const storage = multer.memoryStorage(); // Use in-memory storage
-const upload = multer({ storage });
+const upload = multer({
+  storage,
+  limits: {
+    fileSize: MAX_FILE_SIZE, // Set the maximum file size limit
+  },
+});
 const sharp = require("sharp");
 
 // Middleware to parse request bodies

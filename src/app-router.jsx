@@ -30,7 +30,7 @@ import WidgetsPage from "./views/widgets";
 import WidgetsAgreementsPage from "./views/widgets/widgetsAgreements";
 
 const AppRouter = () => {
-  const basename = window.location.pathname.substr(
+  const basename = window.location.pathname.slice(
     0,
     window.location.pathname.lastIndexOf("/")
   );

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Flex, DatePicker, TextField, Item, ComboBox, Checkbox, ActionButton, View } from "@adobe/react-spectrum"; 
+import { Flex, DatePicker, TextField, Item, ComboBox, Checkbox} from "@adobe/react-spectrum"; 
 import {Accordion, Disclosure, DisclosureHeader, DisclosurePanel} from '@react-spectrum/accordion'
 
-import Upload from '@spectrum-icons/illustrations/Upload';
 import AgreementAction from "../../components/agreement-action";
 import { parseDate } from "@internationalized/date"; 
 import { useDispatch, useSelector } from "react-redux";
@@ -15,7 +14,6 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   const [startDate, setStartDate] = useState(parseDate("2023-01-03"));
   const [endDate, setEndDate] = useState(parseDate("2023-06-03"));
   const [email, setEmail] = useState("");
-  let [selectedKeys, setSelectedKeys] = useState(new Set());
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState(new Set());
@@ -36,21 +34,14 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
       return newSet;
     });
   };
-  const handleSelectionChange = (keys) => {
-    setSelectedKeys(new Set(keys));
-  };
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
   const validateDateRange = (start, end) => start <= end;
 
   const authState = useSelector((state) => state.auth || {});
-  const isAuthenticated = authState.isAuthenticated || false;
   const user = authState.user;
     
-  const token = authState.token;
 
   useEffect(() => {
     if (onChange) {
@@ -68,21 +59,11 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   const formatToISO = (date) => {
     return new Date(date.year, date.month - 1, date.day).toISOString();
   };
-
-  let [majorId, setMajorId] = React.useState(null);
-  let [isFilled1, setIsFilled1] = React.useState(false);
-  let [isFilled2, setIsFilled2] = React.useState(false);
   
   
   const handleBulkUserAgreements = async (params) => {
     const { startDate, endDate, selectedStatuses } = params;
 
-    // Ensure file upload exists
-    /*if (!isFilled1) {
-      alert("Please upload a file containing emails.");
-      return;
-    }*/
-  
     setIsLoading(true);
   
     try {

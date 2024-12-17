@@ -1,7 +1,5 @@
 import { Button, Text } from "@adobe/react-spectrum";
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 
 const AgreementAction = ({ params, onAction, buttonText = "Submit", isDisabled, configs = {}, heading }) => {
   const handleButtonClick = () => {

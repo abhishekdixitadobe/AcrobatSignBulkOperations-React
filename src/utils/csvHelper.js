@@ -1,7 +1,8 @@
 import Papa from 'papaparse';
 
 // Email validation regex
-const validateEmail = (email) => /\S+@\S+\.\S+/.test(email);
+const validateEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/i.test(email);
+
 
 // Function to read CSV file content and return an array of email addresses
 async function readCSV(files) {
