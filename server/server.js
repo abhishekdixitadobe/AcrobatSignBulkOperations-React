@@ -21,7 +21,7 @@ const DailyRotateFile = require('winston-daily-rotate-file');
 const compression = require('compression');
 
 const REGEX_PATTERN = /^[^<>:"/\\|?*]*$/;
-
+const { URL, URLSearchParams } = require('url');
 app.use(helmet());
 app.disable('x-powered-by');
 
@@ -611,15 +611,23 @@ app.post('/api/widgets', async (req, res) => {
     let hasNext = true;   // Flag to control the loop
     
     const apiClient = createApiClient(req);
+    // Base endpoint
+    const baseWidgetsURL = new URL('widgets?showHiddenWidgets=true', ADOBE_SIGN_BASE_URL);
+    const baseLibraryDocumentsURL = new URL(
+      'libraryDocuments?showHiddenWidgets=true',
+      ADOBE_SIGN_BASE_URL
+    );
     while (hasNext) {
-      let widgetsEndpoint = ADOBE_SIGN_BASE_URL + 'widgets?showHiddenWidgets=true';
+      const endpointURL = startIndex
+      ? new URL(baseLibraryDocumentsURL)
+      : new URL(baseWidgetsURL);
       
       if(startIndex !== ''){
-        widgetsEndpoint = ADOBE_SIGN_BASE_URL + 'libraryDocuments?showHiddenWidgets=true&cursor='+startIndex;
+        endpointURL.searchParams.set('cursor', startIndex);
       }
-      console.log("widgetsEndpoint----",widgetsEndpoint);
+      console.log('widgetsEndpoint----', endpointURL.toString());
       const response = await apiClient.get(
-        widgetsEndpoint,
+        endpointURL.toString(),
         {
           headers: {
             'Authorization': req.headers['authorization'],  
@@ -701,14 +709,21 @@ app.post('/api/widgets-agreements', async (req, res) => {
 
 
 app.post('/api/workflows', async (req, res) => {
-  const workflowsEndpoint = ADOBE_SIGN_BASE_URL + 'workflows?includeDraftWorkflows=false&includeInactiveWorkflows=false';
+  //const workflowsEndpoint = ADOBE_SIGN_BASE_URL + 'workflows?includeDraftWorkflows=false&includeInactiveWorkflows=false';
+   // Base URL for workflows
+   const workflowsEndpoint = new URL('workflows', ADOBE_SIGN_BASE_URL);
+    // Add query parameters safely
+    workflowsEndpoint.searchParams.set('includeDraftWorkflows', 'false');
+    workflowsEndpoint.searchParams.set('includeInactiveWorkflows', 'false');
+
+    console.log('Fetching workflows from:', workflowsEndpoint.toString());
   try {
     let allResults = []; // Array to store all results
     let startIndex = 0;  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
 
       const response = await axios.get(
-        workflowsEndpoint,
+        workflowsEndpoint.toString(),
         {
           headers: {
             'Authorization': req.headers['authorization'],  
