@@ -15,7 +15,7 @@
  * from Adobe.
  **************************************************************************/
 
-import React, { useState } from "react";
+import React from "react";
 import { Route, Routes } from "react-router-dom";
 import Landing from "./views/landing";
 import Upload from "./views/upload";
@@ -24,18 +24,12 @@ import OAuthCallback from "./components/oauth-callback"; // Handle OAuth callbac
 import IntegrationCallback from "./components/integrationkey-callback"; // Handle OAuth callback
 import ProtectedRoute from "./components/protected-route"; // Import ProtectedRoute component
 import AgreementsPage from "./views/agreements";
-import AdminLogin from "./views/admin"
+import AdminLogin from "./views/admin";
 import TemplatePage from "./views/templates";
 import WidgetsPage from "./views/widgets";
 import WidgetsAgreementsPage from "./views/widgets/widgetsAgreements";
 
 const AppRouter = () => {
-  const [context, setContext] = useState(null);
-
-  const handleContextChange = (payload) => {
-    setContext(payload);
-  };
-
   const basename = window.location.pathname.substr(
     0,
     window.location.pathname.lastIndexOf("/")
@@ -63,7 +57,7 @@ const AppRouter = () => {
         path={`${basename}/agreementsList/`}
         element={
           <ProtectedRoute>
-            <AgreementsPage onContextChange={(context) => handleContextChange(context)} />
+            <AgreementsPage />
           </ProtectedRoute>
         }
       />
@@ -71,7 +65,7 @@ const AppRouter = () => {
         path={`${basename}/templates/`}
         element={
           <ProtectedRoute>
-            <TemplatePage onContextChange={(context) => handleContextChange(context)} />
+            <TemplatePage />
           </ProtectedRoute>
         }
       />
@@ -79,7 +73,7 @@ const AppRouter = () => {
         path={`${basename}/widgets/`}
         element={
           <ProtectedRoute>
-            <WidgetsPage onContextChange={(context) => handleContextChange(context)} />
+            <WidgetsPage />
           </ProtectedRoute>
         }
       />
@@ -87,7 +81,7 @@ const AppRouter = () => {
         path={`${basename}/widgetsAgreements/`}
         element={
           <ProtectedRoute>
-            <WidgetsAgreementsPage onContextChange={(context) => handleContextChange(context)} />
+            <WidgetsAgreementsPage />
           </ProtectedRoute>
         }
       />

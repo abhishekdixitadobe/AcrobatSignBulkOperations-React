@@ -93,4 +93,4 @@ function Setup() {
   );
 }
 
-export default setup;
+export default Setup;

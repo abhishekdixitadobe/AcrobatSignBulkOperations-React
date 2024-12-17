@@ -10,12 +10,8 @@ import { setWidgetsAgreements } from "../../redux/webformAgreementsSlice";
 const WidgetsPage = () => {  
   const widgets = useSelector((state) => state.widgets || []);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
-  //let [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([2]));
   const authState = useSelector((state) => state.auth || {});
-  const isAuthenticated = authState.isAuthenticated || false;
-  const user = authState.user;
     
-  const token = authState.token;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 

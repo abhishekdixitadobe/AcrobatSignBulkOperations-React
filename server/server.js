@@ -726,8 +726,6 @@ app.post('/api/workflows', async (req, res) => {
     console.log('Fetching workflows from:', workflowsEndpoint.toString());
   try {
     let allResults = []; // Array to store all results
-    let startIndex = 0;  // Start index for pagination
-    let hasNext = true;   // Flag to control the loop
     if (schemesList.includes(workflowsEndpoint.protocol) && domainsList.includes(workflowsEndpoint.hostname)) {
           const response = await axios.get(
             workflowsEndpoint.toString(),

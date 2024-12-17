@@ -15,11 +15,10 @@
  * from Adobe.
 **************************************************************************/
 
-import { Flex, View, Heading, Text, Link , ProgressCircle, Dialog, DialogContainer, Content} from '@adobe/react-spectrum';
+import { Flex, Heading, Text , ProgressCircle, Dialog, DialogContainer, Content} from '@adobe/react-spectrum';
 import React, { useEffect, useState } from 'react';
-import { addLogEntry } from '../../redux/app';
 import ImageResults from '../../components/image-results';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PreviewResults from '../../components/preview';
 
 const ProcessingView = ({onContinue}) => {

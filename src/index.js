@@ -31,29 +31,6 @@ const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 
 const App = () => {
-  // // Fetch sessionID from /api/session
-  // useEffect(() => {
-  //   const fetchSession = () => {
-  //     fetch("/api/session")
-  //       .then((res) => {
-  //         if (!res.ok) {
-  //           throw new Error(`HTTP error! status: ${res.status}`);
-  //         }
-  //         return res.json();
-  //       })
-  //       .then((data) => {
-  //         console.log("SessionID: ", data.sessionID);
-  //       })
-  //       .catch((error) => {
-  //         console.error("There was an error!", error);
-  //         // Retry after 5 seconds
-  //         setTimeout(fetchSession, 5000);
-  //       });
-  //   };
-
-  //   // Call the function initially
-  //   fetchSession();
-  // }, []);
 
   return (
     <Provider theme={defaultTheme} colorScheme="light">
