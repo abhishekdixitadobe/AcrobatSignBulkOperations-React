@@ -35,7 +35,8 @@ const OAUTH_REFRESH_TOKEN_URL = process.env.BASE_URL +'/oauth/v2/refresh';
 const BASE_URL = process.env.BASE_URL;
 // Define allowed schemes and domains
 const schemesList = ['http:', 'https:'];
-const domainsList = [BASE_URL, 'adobesign.com', 'adobesigncdn.com', 'documentcloud.adobe.com','echosign.com','echocdn.com'];
+const baseUrlHostName = new URL(BASE_URL).hostname;
+const domainsList = [baseUrlHostName, 'adobesign.com', 'adobesigncdn.com', 'documentcloud.adobe.com','echosign.com','echocdn.com'];
 
 function createApiClient(req) {
   const client = axios.create();
@@ -626,7 +627,9 @@ app.post('/api/widgets', async (req, res) => {
       if(startIndex !== ''){
         endpointURL.searchParams.set('cursor', startIndex);
       }
-      if (domainsList.includes(BASE_URL)) {
+      console.log("endpointURL.hostname-----",endpointURL.hostname);
+      console.log("domainsList.hostname-----",domainsList);
+      if (schemesList.includes(endpointURL.protocol) && domainsList.includes(endpointURL.hostname)) {
             const response = await apiClient.get(
               endpointURL.toString(),
               {
@@ -725,7 +728,7 @@ app.post('/api/workflows', async (req, res) => {
     let allResults = []; // Array to store all results
     let startIndex = 0;  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
-    if (domainsList.includes(BASE_URL)){
+    if (schemesList.includes(endpointURL.protocol) && domainsList.includes(endpointURL.hostname)) {
           const response = await axios.get(
             workflowsEndpoint.toString(),
             {
