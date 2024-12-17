@@ -32,7 +32,10 @@ const SCOPE = process.env.SCOPE;
 const OAUTH_TOKEN_URL = process.env.BASE_URL +'/oauth/v2/token';
 const OAUTH_REFRESH_TOKEN_URL = process.env.BASE_URL +'/oauth/v2/refresh';
 
-
+const BASE_URL = process.env.BASE_URL;
+// Define allowed schemes and domains
+const schemesList = ['http:', 'https:'];
+const domainsList = [BASE_URL, 'adobesign.com', 'adobesigncdn.com', 'documentcloud.adobe.com','echosign.com','echocdn.com'];
 
 function createApiClient(req) {
   const client = axios.create();
@@ -625,30 +628,33 @@ app.post('/api/widgets', async (req, res) => {
       if(startIndex !== ''){
         endpointURL.searchParams.set('cursor', startIndex);
       }
-      console.log('widgetsEndpoint----', endpointURL.toString());
-      const response = await apiClient.get(
-        endpointURL.toString(),
-        {
-          headers: {
-            'Authorization': req.headers['authorization'],  
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-    
-      console.log("response.data-------------", response.data);
-      allResults = allResults.concat(response.data.userWidgetList); 
+      if (domainsList.includes(BASE_URL)) {
+            const response = await apiClient.get(
+              endpointURL.toString(),
+              {
+                headers: {
+                  'Authorization': req.headers['authorization'],  
+                  'Content-Type': 'application/json',
+                },
+              }
+            );
+          
+            console.log("response.data-------------", response.data);
+            allResults = allResults.concat(response.data.userWidgetList); 
 
-      // Check for next index
-      const nextIndex = response.data.page.nextCursor;
-      console.log("response.data.page------",response.data.page);
-      console.log("nextIndex------",nextIndex);
-      hasNext = (nextIndex !== undefined); 
+            // Check for next index
+            const nextIndex = response.data.page.nextCursor;
+            console.log("response.data.page------",response.data.page);
+            console.log("nextIndex------",nextIndex);
+            hasNext = (nextIndex !== undefined); 
 
-      if (hasNext) {
-        startIndex = nextIndex; // Update startIndex for the next iteration
-      }
-
+            if (hasNext) {
+              startIndex = nextIndex; // Update startIndex for the next iteration
+            }
+          } else {
+            console.error('Invalid URL detected:', endpointURL.toString());
+            return res.status(400).json({ error: 'Invalid URL' });
+          }
     } 
     // Return all collected results
     res.json({ totalResults: allResults.length, userWidgetList: allResults });
@@ -721,23 +727,27 @@ app.post('/api/workflows', async (req, res) => {
     let allResults = []; // Array to store all results
     let startIndex = 0;  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
+    if (domainsList.includes(BASE_URL)){
+          const response = await axios.get(
+            workflowsEndpoint.toString(),
+            {
+              headers: {
+                'Authorization': req.headers['authorization'],  
+                'Content-Type': 'application/json',
+              },
+            }
+          );
 
-      const response = await axios.get(
-        workflowsEndpoint.toString(),
-        {
-          headers: {
-            'Authorization': req.headers['authorization'],  
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      console.log("response.data-------------", response.data);
-      allResults = response.data.userWorkflowList; // Collect results
+          console.log("response.data-------------", response.data);
+          allResults = response.data.userWorkflowList; // Collect results
 
 
-    // Return all collected results
-    res.json({ totalResults: allResults.length, userWorkflowList: allResults });
+        // Return all collected results
+        res.json({ totalResults: allResults.length, userWorkflowList: allResults });
+      } else {
+        console.error('Invalid URL detected:', endpointURL.toString());
+        return res.status(400).json({ error: 'Invalid URL' });
+      }
     
   } catch (error) {
     console.error('Token exchange failed', error);
