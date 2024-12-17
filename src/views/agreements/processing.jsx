@@ -25,13 +25,9 @@ import PreviewResults from '../../components/preview';
 const ProcessingView = ({onContinue}) => {
     const logEntryList = useSelector((state) => state.app.logEntries);
     const selectedBackground = useSelector((state) => state.app.selectedBackground);
-    const dispatch = useDispatch();
 
-
-    const [logEntries, setLogEntries] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [action, setAction] = useState('');
-    const [actionStatus, setActionStatus] = useState('');
     const [showResults, setShowResults] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
     const [previewImages, setPreviewImages] = useState(null);

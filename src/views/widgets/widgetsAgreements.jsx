@@ -8,13 +8,7 @@ import { saveAs } from "file-saver";
 const WidgetsAgreementsPage = () => {  
   const widgetsAgreements = useSelector((state) => state.widgetsAgreements || []);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
-  //let [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([2]));
   const authState = useSelector((state) => state.auth || {});
-  const isAuthenticated = authState.isAuthenticated || false;
-  const user = authState.user;
-    
-  const token = authState.token;
-
   console.log("Agreements in widgetsAgreementsPage:", widgetsAgreements);
 
   const columns = [
@@ -73,7 +67,6 @@ const WidgetsAgreementsPage = () => {
     }
 
     try {
-      const zip = new JSZip();
 
       // Send selected IDs to backend and get back the files
       const response = await fetch('/api/download-formfields', {
@@ -108,8 +101,6 @@ const WidgetsAgreementsPage = () => {
     }
 
     try {
-      const zip = new JSZip();
-
       // Send selected IDs to backend and get back the files
       const response = await fetch('/api/download-agreements', {
         method: 'POST',

@@ -14,7 +14,6 @@ const Upload = () => {
   const configs = location.state.configs;
   const heading = location.state.heading;
 
-  const [formData, setFormData] = useState({});
   const [isExecuted, setisExecuted] = useState(false);
 
   // Frontend AIO Things

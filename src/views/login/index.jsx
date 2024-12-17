@@ -1,17 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { login } from "../../services/authService";
-import { Button, Flex, Heading, Image, Text, View  } from "@adobe/react-spectrum";
+import { Button, Text, View  } from "@adobe/react-spectrum";
 import { Card } from "@react-spectrum/card";
 import { Content } from "@react-spectrum/view";
 import backgroundImage from "./login-background.png";
-import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const Login = () => {
     const navigate = useNavigate();
-    const dispatch = useDispatch();
-
-    const [authUrl, setAuthUrl] = useState('');
 
     const handleLogin = () => {
         try {
@@ -20,15 +15,9 @@ const Login = () => {
           console.error("Invalid URL provided for redirection:", error);
           alert("An error occurred. Please try again.");
         }
-     // window.location.href = AUTH_URL;
     };
     const handleIntegrationLogin = () => {
         window.location.href = "https://localhost:3000/integrationKey";
-     // window.location.href = AUTH_URL;
-    };
-    const handleAdminLogin = () => {
-      console.log("Admin login button clicked");
-      navigate('/adminLogin/');
     };
     // Access environment variables
     const showOAuthLogin = process.env.REACT_APP_SHOW_OAUTH_LOGIN === 'true';

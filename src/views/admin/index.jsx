@@ -1,11 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, {useState } from "react";
 import { Provider, defaultTheme, Button, TextField, Form, Heading, View } from '@adobe/react-spectrum';
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer";
 import AgreementAction from "../../components/agreement-action";
 
-function setup() {
+function Setup() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -42,7 +42,6 @@ function setup() {
       console.error("Error making API call:", error);
       alert("An error occurred. Please try again later.");
     } finally {
-      setIsLoading(false);
     }
     console.log("Logging in...");
   };
