@@ -631,7 +631,7 @@ app.post('/api/widgets', async (req, res) => {
       console.log("domainsList.hostname-----",domainsList);
       if (schemesList.includes(endpointURL.protocol) && domainsList.includes(endpointURL.hostname)) {
             const response = await apiClient.get(
-              endpointURL.toString(),
+              endpointURL,
               {
                 headers: {
                   'Authorization': req.headers['authorization'],  
@@ -728,7 +728,7 @@ app.post('/api/workflows', async (req, res) => {
     let allResults = []; // Array to store all results
     let startIndex = 0;  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
-    if (schemesList.includes(endpointURL.protocol) && domainsList.includes(endpointURL.hostname)) {
+    if (schemesList.includes(workflowsEndpoint.protocol) && domainsList.includes(workflowsEndpoint.hostname)) {
           const response = await axios.get(
             workflowsEndpoint.toString(),
             {
