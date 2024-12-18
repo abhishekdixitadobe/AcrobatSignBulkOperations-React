@@ -101,7 +101,7 @@
     "sharp": "^0.33.5",
     "slate": "^0.102.0",
     "slate-history": "^0.100.0",
-    "slate-react": "^0.102.0",
+    "slate-react": "^0.111.0",
     "source-map-loader": "^5.0.0",
     "stream": "^0.0.2",
     "style-loader": "^3.3.4",
