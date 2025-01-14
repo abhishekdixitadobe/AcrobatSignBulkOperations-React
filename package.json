@@ -99,7 +99,7 @@
     "redux": "^5.0.1",
     "request": "^2.88.2",
     "sharp": "^0.33.5",
-    "slate": "^0.102.0",
+    "slate": "^0.110.2",
     "slate-history": "^0.100.0",
     "slate-react": "^0.102.0",
     "source-map-loader": "^5.0.0",
