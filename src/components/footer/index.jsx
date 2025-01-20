@@ -1,18 +1,14 @@
 import { Button, ButtonGroup, Flex, View } from "@adobe/react-spectrum";
-import React from "react";
-import { useLocation } from "react-router-dom";
-import { useSelector } from "react-redux";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Footer = (props) => {
   const {
     disabledBack = false,
-    disabledExecute = false,
-    executeOnPress = () => {},
-    showDelete = false,
     showDownload = false,
-    showDownloadFormField =false,
-    showAuditReport =false,
+    showDownloadFormField = false,
+    showAuditReport = false,
+    showDelete = false,
     showDownloadList = false,
     showGetAgreements = false,
     deleteOnPress = () => {},
@@ -21,16 +17,23 @@ const Footer = (props) => {
     downloadFormField = () => {},
     downloadAuditReport = () => {},
     agreementList = () => {},
-    configs = null,
-    heading = "",
   } = props;
 
-  const location = useLocation();
-  const isDisabled = false;
+  const [isLoading, setIsLoading] = useState({
+    download: false,
+    downloadList: false,
+    downloadFormField: false,
+    auditReport: false,
+    delete: false,
+  });
 
-  const navigate = useNavigate();
-  const handleNavigation = () => {
-    navigate(configs.page, { state: { heading, configs } });
+  const handleAsyncAction = async (action, key) => {
+    setIsLoading((prev) => ({ ...prev, [key]: true }));
+    try {
+      await action();
+    } finally {
+      setIsLoading((prev) => ({ ...prev, [key]: false }));
+    }
   };
 
   return (
@@ -42,59 +45,73 @@ const Footer = (props) => {
               <ButtonGroup>
                 <Button
                   variant="secondary"
-                  onPress={() => {
-                    window.history.back();
-                  }}
+                  onPress={() => window.history.back()}
                   isDisabled={disabledBack}
                 >
                   Back
                 </Button>
 
-                {!configs ? (
-                  <>
-                    {showDownload ? (
-                      <Button variant="cta" onPress={downloadOnPress}>
-                        Download
-                      </Button>
-                    ) : ''}
-                  </>
-                ) : ''}
-                {!configs ? (
-                  <>
-                    {showDownloadList ? (
-                      <Button variant="cta" onPress={downloadList}>
-                        Download List
-                      </Button>
-                    ) : ''}
-                  </>
-                ) : ''}
-                 {!configs ? (
-                  <>
-                    {showGetAgreements ? (
-                      <Button variant="cta" onPress={agreementList}>
-                        Get Agreements
-                      </Button>
-                    ) : ''}
-                  </>
-                ) : ''}
-          
-                {showDownloadFormField ? (
-                  <Button variant="cta" onPress={downloadFormField}>
+                {showDownload && (
+                  <Button
+                    variant="cta"
+                    isPending={isLoading.download}
+                    onPress={() => handleAsyncAction(downloadOnPress, "download")}
+                  >
+                    Download
+                  </Button>
+                )}
+
+                {showDownloadList && (
+                  <Button
+                    variant="cta"
+                    isPending={isLoading.downloadList}
+                    onPress={() =>
+                      handleAsyncAction(downloadList, "downloadList")
+                    }
+                  >
+                    Download List
+                  </Button>
+                )}
+
+                {showGetAgreements && (
+                  <Button variant="cta" onPress={agreementList}>
+                    Get Agreements
+                  </Button>
+                )}
+
+                {showDownloadFormField && (
+                  <Button
+                    variant="cta"
+                    isPending={isLoading.downloadFormField}
+                    onPress={() =>
+                      handleAsyncAction(downloadFormField, "downloadFormField")
+                    }
+                  >
                     Download Form Fields
                   </Button>
-                ): ''}
+                )}
 
-                {showAuditReport ? (
-                  <Button variant="cta" onPress={downloadAuditReport}>
+                {showAuditReport && (
+                  <Button
+                    variant="cta"
+                    isPending={isLoading.auditReport}
+                    onPress={() =>
+                      handleAsyncAction(downloadAuditReport, "auditReport")
+                    }
+                  >
                     Download Audit Report
                   </Button>
-                ): ''}
+                )}
 
-                {showDelete ? (
-                  <Button variant="cta" onPress={deleteOnPress}>
+                {showDelete && (
+                  <Button
+                    variant="cta"
+                    isPending={isLoading.delete}
+                    onPress={() => handleAsyncAction(deleteOnPress, "delete")}
+                  >
                     Delete Agreements
                   </Button>
-                ): ''}
+                )}
               </ButtonGroup>
             </Flex>
           </Flex>
