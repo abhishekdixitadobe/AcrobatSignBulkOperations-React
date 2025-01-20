@@ -27,6 +27,7 @@
     "events": "^3.3.0",
     "path-browserify": "^1.0.1",
     "shx": "^0.3.4",
+    "sonarqube-scanner": "^4.2.6",
     "stream-browserify": "^3.0.0",
     "url": "^0.11.3",
     "webpack": "^5.89.0",

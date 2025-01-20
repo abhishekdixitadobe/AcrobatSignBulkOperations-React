@@ -22,6 +22,7 @@ const DailyRotateFile = require('winston-daily-rotate-file');
 const { URL, URLSearchParams } = require('url');
 app.use(helmet());
 app.disable('x-powered-by');
+const { PassThrough } = require('stream');
 
 const CLIENT_ID = process.env.CLIENT_ID; 
 const REDIRECT_URI = process.env.REDIRECT_URI; 
@@ -38,43 +39,45 @@ const domainsList = [baseUrlHostName, 'adobesign.com', 'adobesigncdn.com', 'docu
 
 function createApiClient(req) {
   const client = axios.create();
-  client.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      if (error.response && error.response.status === 401) {
-        console.log("Token expired, refreshing...");
+  const integrationLogin = process.env.REACT_APP_SHOW_INTEGRATION_LOGIN;
+  if(integrationLogin === 'false'){
+    client.interceptors.response.use(
+      (response) => response,
+      async (error) => {
+        if (error.response && error.response.status === 401) {
+          console.log("Token expired, refreshing...");
 
-        const { refreshToken } = req.session.tokens || {};
-        if (!refreshToken) {
-          console.warn("No refresh token found in session. Redirecting to login...");
-          return Promise.reject({
-            response: {
-              status: 401,
-              data: { message: "Session expired. Please log in again." },
-            },
-          });
+          const { refreshToken } = req.session.tokens || {};
+          if (!refreshToken) {
+            console.warn("No refresh token found in session. Redirecting to login...");
+            return Promise.reject({
+              response: {
+                status: 401,
+                data: { message: "Session expired. Please log in again." },
+              },
+            });
+          }
+
+          try {
+            const newTokens = await refreshTokens(refreshToken);
+            req.session.tokens = {
+              accessToken: newTokens.accessToken,
+              accessTokenExpiry: Date.now() + newTokens.expires_in * 1000,
+            };
+            req.session.save();
+
+            error.config.headers["Authorization"] = `Bearer ${newTokens.accessToken}`;
+            return client.request(error.config); // Retry original request
+          } catch (refreshError) {
+            console.error("Error refreshing tokens:", refreshError.message);
+            return Promise.reject(refreshError);
+          }
         }
 
-        try {
-          const newTokens = await refreshTokens(refreshToken);
-          req.session.tokens = {
-            accessToken: newTokens.accessToken,
-            accessTokenExpiry: Date.now() + newTokens.expires_in * 1000,
-          };
-          req.session.save();
-
-          error.config.headers["Authorization"] = `Bearer ${newTokens.accessToken}`;
-          return client.request(error.config); // Retry original request
-        } catch (refreshError) {
-          console.error("Error refreshing tokens:", refreshError.message);
-          return Promise.reject(refreshError);
-        }
+        return Promise.reject(error);
       }
-
-      return Promise.reject(error);
-    }
-  );
-
+    );
+  }
   return client;
 }
 
@@ -263,24 +266,33 @@ function convertToISO8601(dateObj) {
 }
 
 async function checkSession(req, res){
-  if (!req.session?.tokens?.accessToken) {
-    return res.status(401).json({ message: "Session expired. Please log in again." });
-  }
+  const integrationLogin = process.env.REACT_APP_SHOW_INTEGRATION_LOGIN;
+  if(integrationLogin === 'false'){
+    if (!req.session?.tokens?.accessToken) {
+      return res.status(401).json({ message: "Session expired. Please log in again." });
+    }
 
-  const isTokenExpired = (req) => {
-    const { accessTokenExpiry } = req.session.tokens || {};
-    return !accessTokenExpiry || Date.now() >= accessTokenExpiry;
-  };
-
-  if (isTokenExpired(req)) {
-    console.log("Access token expired, refreshing before starting...");
-    const newTokens = await refreshTokens(req.session.tokens.refreshToken);
-    req.session.tokens = {
-      accessToken: newTokens.accessToken,
-      refreshToken: req.session.tokens.refreshToken,
-      accessTokenExpiry: Date.now() + newTokens.expires_in * 1000,
+    const isTokenExpired = (req) => {
+      const { accessTokenExpiry } = req.session.tokens || {};
+      return !accessTokenExpiry || Date.now() >= accessTokenExpiry;
     };
-    req.session.save();
+
+    if (isTokenExpired(req)) {
+      console.log("Access token expired, refreshing before starting...");
+      const newTokens = await refreshTokens(req.session.tokens.refreshToken);
+      req.session.tokens = {
+        accessToken: newTokens.accessToken,
+        refreshToken: req.session.tokens.refreshToken,
+        accessTokenExpiry: Date.now() + newTokens.expires_in * 1000,
+      };
+      req.session.save();
+    }
+  } else {
+      req.session.tokens = {
+        accessToken: process.env.INTEGRATION_KEY,
+        refreshToken: process.env.INTEGRATION_KEY
+      };
+      req.session.save();
   }
 }
 app.post('/api/download-auditReport', async (req, res) => {
@@ -374,49 +386,68 @@ app.post('/api/download-formfields', async (req, res) => {
 });
 
 app.post('/api/download-agreements', async (req, res) => {
+  const { ids } = req.body;
+  const zip = new JSZip();
+  const apiClient = createApiClient(req);
+  
+  const BATCH_SIZE = 100; // Adjust batch size based on system capacity
 
-    const { ids } = req.body;
-    const zip = new JSZip();
-    const apiClient = createApiClient(req);
-    try {
+  try {
+    // Function to process a batch of agreement IDs
+    async function processBatch(batchIds) {
       await Promise.all(
-        ids.map(async (id) => {
+        batchIds.map(async (id) => {
           const endpoint = `${ADOBE_SIGN_BASE_URL}agreements/${id}/combinedDocument`;
-          console.log("download endpoint::",endpoint);
-          const response = await apiClient.get(endpoint, {
-            headers: {
-              'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
-              'Content-Type': 'application/json',
-            },
-            responseType: 'arraybuffer', // Required for binary data
-          });
-          const filename = `agreement_${id}.pdf`; // Name the file as needed
-          zip.file(filename, response.data, { binary: true });
+          console.log("download endpoint::", endpoint);
+          
+          try {
+            const response = await apiClient.get(endpoint, {
+              headers: {
+                'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
+                'Content-Type': 'application/json',
+              },
+              responseType: 'arraybuffer', // Required for binary data
+            });
 
-          return { filename, fileData: response.data.toString('base64') };
-
+            const filename = `agreement_${id}.pdf`; // Name the file as needed
+            zip.file(filename, response.data, { binary: true });
+          } catch (err) {
+            console.error(`Error fetching agreement ${id}:`, err.message);
+          }
         })
       );
-      const userId = req.session.userId;
-      const userEmail = req.session.userEmail;
-      logger.info('User Activity', {
-        userId: userId,
-        email: userEmail,
-        action: 'Download Agreements',
-      });
-      // Send as zip file
-      const content = await zip.generateAsync({ type: 'nodebuffer' });
-      res.set({
-        'Content-Type': 'application/zip',
-        'Content-Disposition': 'attachment; filename="agreements.zip"'
-      });
-      res.send(content);
-    } catch (error) {
-      console.error("Error fetching files:", error.message);
-      res.status(500).json({ error: "Failed to fetch files." });
     }
 
+    // Process IDs in batches
+    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
+      console.log("current downlaod value:::",i);
+      const batch = ids.slice(i, i + BATCH_SIZE);
+      await processBatch(batch); // Process each batch sequentially
+    }
+
+    // Log user activity
+    const userId = req.session.userId;
+    const userEmail = req.session.userEmail;
+    logger.info('User Activity', {
+      userId: userId,
+      email: userEmail,
+      action: 'Download Agreements',
+    });
+
+    // Send the ZIP file with all the downloaded agreements
+    const content = await zip.generateAsync({ type: 'nodebuffer' });
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="agreements.zip"'
+    });
+    res.send(content);
+
+  } catch (error) {
+    console.error("Error fetching files:", error.message);
+    res.status(500).json({ error: "Failed to fetch files." });
+  }
 });
+
 
 app.post('/api/download-templateFormfields', async (req, res) => {
 
