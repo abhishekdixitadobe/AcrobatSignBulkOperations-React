@@ -11,9 +11,10 @@ import { readCSV } from "../../utils/csvHelper";
 import DragAndDrop from "../drag-and-drop";
 
 const AgreementForm = ({onChange, setUploadFiles}) => {
-  const [startDate, setStartDate] = useState(parseDate("2023-01-03"));
-  const [endDate, setEndDate] = useState(parseDate("2023-06-03"));
+  const [startDate, setStartDate] = useState(parseDate("2024-12-29"));
+  const [endDate, setEndDate] = useState(parseDate("2024-12-30"));
   const [email, setEmail] = useState("");
+  const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [selectedStatuses, setSelectedStatuses] = useState(new Set());
@@ -81,6 +82,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
           startDate: formatToISO(startDate),
           endDate: formatToISO(endDate),
           email,
+          title,
           selectedStatuses
         };
         
@@ -120,7 +122,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   };
 
   const handleApiCall = async (params) => {
-    const { startDate, endDate, email, selectedStatuses } = params;
+    const { startDate, endDate, email, selectedStatuses, title} = params;
 
     
     // Validate email and date range
@@ -140,6 +142,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
         startDate: formatToISO(startDate), // Convert to ISO string
         endDate: formatToISO(endDate), 
         email,
+        title,
         selectedStatuses
       };
       const response = await fetch(apiUrl, {
@@ -187,6 +190,13 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
               type="email"
               necessityIndicator="label"
             />
+            <TextField
+              label="Title Name"
+              value={title}
+              onChange={setTitle}
+              type="text"
+              necessityIndicator="label"
+            />
             <ComboBox label="Select Statuses" onSelectionChange={() => {}}>
               {agreementStatusOptions.map((option) => (
                 <Item key={option.id} textValue={option.name}>
@@ -200,7 +210,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
               ))}
             </ComboBox>
             <AgreementAction
-              params={{ startDate, endDate, email, selectedStatuses: Array.from(selectedStatuses)}}
+              params={{ startDate, endDate, email, title, selectedStatuses: Array.from(selectedStatuses)}}
               onAction={handleApiCall}
               buttonText={"Get Agreements"}
               isDisabled={!email || isLoading}

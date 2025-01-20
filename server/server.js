@@ -595,11 +595,11 @@ app.post('/api/search', async (req, res) => {
     let allResults = [];
     let startIndex = 0;
     let hasNext = true;
-    const { startDate, endDate, email, selectedStatuses } = req.body;
+    const { startDate, endDate, email, selectedStatuses,title } = req.body;
     const isoStartDate = convertToISO8601(startDate);
     const isoEndDate = convertToISO8601(endDate);
     const searchEndpoint = ADOBE_SIGN_BASE_URL + 'search';
-
+    console.log('title0-------',title);
     const apiClient = createApiClient(req);
 
     while (hasNext) {
@@ -609,10 +609,12 @@ app.post('/api/search', async (req, res) => {
           searchEndpoint,
           {
             scope: ["AGREEMENT_ASSETS"],
+            query: title,
             agreementAssetsCriteria: {
               modifiedDate: {
                 range: { gt: isoStartDate, lt: isoEndDate },
               },
+              "queryableFields": "title",
               pageSize: 50,
               startIndex: startIndex,
               status: selectedStatuses,
