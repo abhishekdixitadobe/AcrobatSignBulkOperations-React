@@ -85,7 +85,7 @@ const Upload = () => {
             <Text>
             Agreements will be fetched between this date range.
             </Text>
-            <Form isRequired necessityIndicator="label">
+            <Form necessityIndicator="label">
               <UseCaseForm
                 id={configs.formComponentId}
                 onFormChange={handleFormChange}

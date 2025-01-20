@@ -181,20 +181,20 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
         <DisclosureHeader>User Agreement Lookup</DisclosureHeader>
         <DisclosurePanel>
           <Flex gap="size-200" wrap>
-            <DatePicker label="Start Date" value={startDate} onChange={setStartDate} />
-            <DatePicker label="End Date" value={endDate} onChange={setEndDate} />
+            <DatePicker label="Start Date" isRequired value={startDate} onChange={setStartDate} />
+            <DatePicker label="End Date" isRequired value={endDate} onChange={setEndDate} />
             <TextField
               label="User Email"
               value={email}
               onChange={setEmail}
               type="email"
+              isRequired
               necessityIndicator="label"
             />
             <TextField
-              label="Title Name"
+              label="Agreement Title"
               value={title}
               onChange={setTitle}
-              type="text"
               necessityIndicator="label"
             />
             <ComboBox label="Select Statuses" onSelectionChange={() => {}}>
@@ -223,8 +223,13 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
           <DisclosurePanel>
             <Flex direction="column" gap="size-200">
               <Flex direction="row" gap="size-200">
-                <DatePicker label="Start Date" value={startDate} onChange={setStartDate} />
-                <DatePicker label="End Date" value={endDate} onChange={setEndDate} />
+                <DatePicker label="Start Date" isRequired value={startDate} onChange={setStartDate} />
+                <DatePicker label="End Date" isRequired value={endDate} onChange={setEndDate} />
+                <TextField
+                  label="Agreement Title"
+                  value={title}
+                  onChange={setTitle}
+                />
                 <ComboBox label="Select Statuses" onSelectionChange={() => {}}>
                   {agreementStatusOptions.map((option) => (
                     <Item key={option.id} textValue={option.name}>
@@ -249,7 +254,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
                 setUploadFiles={setUploadFiles}
               />
               <AgreementAction
-                  params={{ startDate, endDate, email, selectedStatuses: Array.from(selectedStatuses)}}
+                  params={{ startDate, endDate, email, title,selectedStatuses: Array.from(selectedStatuses)}}
                   onAction={handleBulkUserAgreements}
                   buttonText="Get Agreements"
                   isDisabled={!isButtonEnabled}
