@@ -2,7 +2,7 @@ import React, { useState, useRef } from "react";
 import { Flex, DatePicker, TextField, Button, Item, ComboBox, DropZone, IllustratedMessage, Heading, Content, FileTrigger } from "@adobe/react-spectrum";
 import Upload from '@spectrum-icons/illustrations/Upload';
 import AgreementAction from "../../components/agreement-action";
-import { parseDate } from "@internationalized/date";
+import {today, getLocalTimeZone} from '@internationalized/date';
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import DragAndDrop from "../drag-and-drop";
@@ -10,8 +10,8 @@ import { readCSV } from "../../utils/csvHelper";
 import { setTemplates } from "../../redux/templateSlice";
 
 const TemplateForm = ({onChange, setUploadFiles}) => {
-    const [startDate, setStartDate] = useState(parseDate("2023-01-03"));
-    const [endDate, setEndDate] = useState(parseDate("2023-06-03"));
+    const [startDate, setStartDate] = useState(today(getLocalTimeZone()));
+    const [endDate, setEndDate] = useState(today(getLocalTimeZone()));
 
     const authState = useSelector((state) => state.auth || {});
     const isAuthenticated = authState.isAuthenticated || false;

@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Flex, DatePicker, TextField, Item, ComboBox, Checkbox} from "@adobe/react-spectrum"; 
 import {Accordion, Disclosure, DisclosureHeader, DisclosurePanel} from '@react-spectrum/accordion'
-
+import {today, getLocalTimeZone} from '@internationalized/date';
 import AgreementAction from "../../components/agreement-action";
-import { parseDate } from "@internationalized/date"; 
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { setAgreements} from "../../redux/agreementsSlice";
@@ -11,8 +10,8 @@ import { readCSV } from "../../utils/csvHelper";
 import DragAndDrop from "../drag-and-drop";
 
 const AgreementForm = ({onChange, setUploadFiles}) => {
-  const [startDate, setStartDate] = useState(parseDate("2024-12-29"));
-  const [endDate, setEndDate] = useState(parseDate("2024-12-30"));
+  const [startDate, setStartDate] = useState(today(getLocalTimeZone()));
+  const [endDate, setEndDate] = useState(today(getLocalTimeZone()));
   const [email, setEmail] = useState("");
   const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
