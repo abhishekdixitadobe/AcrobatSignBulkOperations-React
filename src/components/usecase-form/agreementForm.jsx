@@ -109,7 +109,12 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
       // Combine results from each email
       const agreements = results.flatMap(data => data.agreementAssetsResults);
       
-      dispatch(setAgreements(agreements));
+      // dispatch(setAgreements(data.agreementAssetsResults));
+      dispatch(setAgreements({ 
+        results: data.agreementAssetsResults, 
+        email: email 
+      }));
+      setEmail(email); // Store email in context
       navigate("/agreementsList");
       
     } catch (error) {
@@ -157,7 +162,12 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
         const data = await response.json();
         console.log("Fetched Agreements Data:", data);
         
-        dispatch(setAgreements(data.agreementAssetsResults));
+       // dispatch(setAgreements(data.agreementAssetsResults));
+        dispatch(setAgreements({ 
+          results: data.agreementAssetsResults, 
+          email: email 
+        }));
+        setEmail(email); // Store email in context
         navigate("/agreementsList");
       } else if (response.status === 401) {
         alert("Session expired. Redirecting to login...");

@@ -15,35 +15,57 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
   const [csvData, setCsvData] = useState([]);
 
   useEffect(() => {
-    filledSrc.forEach(parseCSV);
+    const parseAllCSVs = async () => {
+      const parsedData = await Promise.all(filledSrc.map(parseCSV));
+      setCsvData(parsedData.flat()); // Merge all data into one array
+    };
+
+    parseAllCSVs();
   }, [filledSrc]);
 
   const parseCSV = async (uploadedFile) => {
-    const response = await fetch(uploadedFile.url);
-    const file = await response.blob();
+    try {
+      const response = await fetch(uploadedFile.url);
+      const file = await response.blob();
 
-    Papa.parse(file, {
-      complete: (results) => {
-       setCsvData(results.data);
-      },
-      header: true,
-    });
+      return new Promise((resolve) => {
+        Papa.parse(file, {
+          header: true,
+          complete: (results) => {
+            resolve(results.data);
+          },
+        });
+      });
+    } catch (error) {
+      console.error("Error parsing CSV:", error);
+      return [];
+    }
   };
+
   const columns = csvData.length > 0 ? Object.keys(csvData[0]) : [];
+
   return (
     <Flex height="100%" direction="column">
       {Array.isArray(csvData) && csvData.length > 0 ? (
-        <TableView aria-label="File Display" width={"100%"} height="size-2400">
+        <TableView aria-label="File Display" width="100%" height="size-2400">
           <TableHeader>
             {columns.map((column) => (
-              <Column align="start" allowsResizing>{column.charAt(0).toUpperCase() + column.slice(1)}</Column>
+              <Column
+                key={column}
+                align="start"
+                allowsResizing
+              >
+                {column.charAt(0).toUpperCase() + column.slice(1)}
+              </Column>
             ))}
           </TableHeader>
           <TableBody>
-            {csvData.map((data) => (
-              <Row>
+            {csvData.map((data, rowIndex) => (
+              <Row key={rowIndex}>
                 {columns.map((column) => (
-                  <Cell>{data[column]}</Cell>
+                  <Cell key={`${rowIndex}-${column}`}>
+                    {data[column] || "N/A"}
+                  </Cell>
                 ))}
               </Row>
             ))}

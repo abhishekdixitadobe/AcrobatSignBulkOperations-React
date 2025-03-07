@@ -38,14 +38,14 @@ const apiCall = async (endpoint, method, token, body) => {
  * @param {string} token - Authorization token for the API request.
  * @param {string} fileName - Name of the ZIP file to save.
  */
-export const downloadFilesAsZip = async (endpoint, ids, token, fileName) => {
+export const downloadFilesAsZip = async (endpoint, ids, token, fileName, email) => {
   if (ids.length === 0) {
     alert("No items selected for download.");
     return;
   }
 
   try {
-    const response = await apiCall(endpoint, "POST", token, { ids });
+    const response = await apiCall(endpoint, "POST", token, { ids, email });
 
     // Convert response to Blob and download as a ZIP file
     const blob = await response.blob();

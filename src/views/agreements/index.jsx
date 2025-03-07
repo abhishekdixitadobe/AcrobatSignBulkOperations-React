@@ -15,7 +15,8 @@ import Footer from "../../components/footer";
 import { downloadFilesAsZip, downloadList } from "../../services/apiService";
 
 const AgreementsPage = () => {
-  const agreements = useSelector((state) => state.agreements || []);
+  //const agreements = useSelector((state) => state.agreements || []);
+  const { agreementAssetsResults, email } = useSelector((state) => state.agreements);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
   const authState = useSelector((state) => state.auth || {});
   const token = authState.token;
@@ -29,18 +30,18 @@ const AgreementsPage = () => {
   const handleDownloadList = async (fileName) => {
     const idsToDownload =
       selectedKeys === "all"
-        ? agreements.map((agreement) => agreement.id)
+        ? agreementAssetsResults.map((agreement) => agreement.id)
         : Array.from(selectedKeys);
 
-    await downloadList(idsToDownload, agreements, fileName);
+    await downloadList(idsToDownload, agreementAssetsResults, fileName);
   };
   const handleDownload = async (endpoint, fileName) => {
     const idsToDownload =
       selectedKeys === "all"
-        ? agreements.map((agreement) => agreement.id)
+        ? agreementAssetsResults.map((agreement) => agreement.id)
         : Array.from(selectedKeys);
 
-    await downloadFilesAsZip(endpoint, idsToDownload, token, fileName);
+    await downloadFilesAsZip(endpoint, idsToDownload, token, fileName, email);
   };
 
   const showDeleteButton = process.env.REACT_APP_SHOW_DELETE === "true";
@@ -55,7 +56,7 @@ const AgreementsPage = () => {
       marginTop={"size-200"}
     >
       <View gridArea="content" width="75%" marginX="auto" overflow="auto">
-        <Heading level={2}>Total Agreements: {agreements.length}</Heading>
+        <Heading level={2}>Total Agreements: {agreementAssetsResults.length}</Heading>
         <TableView
           selectionMode="multiple"
           aria-label="Agreements Table"
@@ -72,7 +73,7 @@ const AgreementsPage = () => {
               </Column>
             )}
           </TableHeader>
-          <TableBody items={agreements}>
+          <TableBody items={agreementAssetsResults}>
             {(item) => (
               <Row key={item.id}>
                 <Cell>{item.id || "N/A"}</Cell>

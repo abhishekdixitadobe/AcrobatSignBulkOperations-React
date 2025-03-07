@@ -22,7 +22,7 @@ const TemplatePage = () => {
 
   const downloadFormField = async () => {
     const idsToDownload = selectedKeys === "all"
-    ? agreements.map((agreement) => agreement.id)
+    ? templates.map((agreement) => agreement.id)
     : Array.from(selectedKeys);
 
     if (idsToDownload.length === 0) {
@@ -57,7 +57,7 @@ const TemplatePage = () => {
 
   const downloadAllasZip = async () => {
     const idsToDownload = selectedKeys === "all"
-    ? agreements.map((agreement) => agreement.id)
+    ? templates.map((agreement) => agreement.id)
     : Array.from(selectedKeys);
 
     if (idsToDownload.length === 0) {

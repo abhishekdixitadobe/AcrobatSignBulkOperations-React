@@ -5,7 +5,8 @@ const agreementsSlice = createSlice({
   initialState: [], // Initialize as an empty array
   reducers: {
     setAgreements: (state, action) => {
-      return action.payload; // Replace the state with the incoming payload
+      state.agreementAssetsResults = action.payload.results;
+      state.email = action.payload.email; // Update email
     },
   },
 });
