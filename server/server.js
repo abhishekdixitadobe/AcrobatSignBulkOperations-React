@@ -597,7 +597,7 @@ app.post('/api/search', async (req, res) => {
               pageSize: 50,
               startIndex: startIndex,
               status: selectedStatuses,
-              type: ["AGREEMENT"],
+              type: ["AGREEMENT","MEGASIGN_CHILD", "WIDGET_INSTANCE", "MEGASIGN_PARENT"],
               visibility: "SHOW_ALL",
             },
           },
