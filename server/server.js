@@ -609,6 +609,8 @@ app.post('/api/search', async (req, res) => {
           }
         );
 
+        console.log(response.data.agreementAssetsResults.agreementAssetsResultList)
+
         allResults = allResults.concat(response.data.agreementAssetsResults.agreementAssetsResultList);
         const nextIndex = response.data.agreementAssetsResults.searchPageInfo.nextIndex;
         hasNext = nextIndex !== null;
@@ -628,7 +630,7 @@ app.post('/api/search', async (req, res) => {
     const userId = req.session.userId;
     const userEmail = req.session.userEmail;
     logger.info('User Activity', { userId, email: userEmail, action: 'Agreement Search' });
-
+    logger.info('User Activity', { totalResults: allResults.length, agreementAssetsResults: allResults, action: 'Agreement Search' });
     res.json({ totalResults: allResults.length, agreementAssetsResults: allResults });
   } catch (error) {
     console.error('Search request failed', error);

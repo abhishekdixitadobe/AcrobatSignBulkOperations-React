@@ -63,7 +63,7 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   
   const handleBulkUserAgreements = async (params) => {
     const { startDate, endDate, selectedStatuses } = params;
-
+  
     setIsLoading(true);
   
     try {
@@ -76,15 +76,17 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
       }
   
       const apiUrl = `/api/search`;
+  
+      // Map API calls for all emails
       const apiCalls = emails.map(email => {
         const reqBody = {
           startDate: formatToISO(startDate),
           endDate: formatToISO(endDate),
           email,
           title,
-          selectedStatuses
+          selectedStatuses,
         };
-        
+  
         return fetch(apiUrl, {
           method: "POST",
           headers: {
@@ -92,38 +94,48 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
             "Authorization": `Bearer ${authState.token}`,
           },
           body: JSON.stringify(reqBody),
-        }).then(response => {
-          if (response.ok) return response.json();
-          if (response.status === 401) {
-            alert("Session expired. Redirecting to login...");
-            navigate("/login");
-            throw new Error("Unauthorized");
-          } 
-          throw new Error(`Failed to fetch for ${email}`);
-        });
+        })
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+            if (response.status === 401) {
+              alert("Session expired. Redirecting to login...");
+              navigate("/login");
+              throw new Error("Unauthorized");
+            }
+            throw new Error(`Failed to fetch for ${email}`);
+          })
+          .then(parsedData => ({
+            email,
+            data: parsedData, // Ensure parsed data is attached here
+          }));
       });
   
       // Await all API calls
       const results = await Promise.all(apiCalls);
-      
+  
       // Combine results from each email
-      const agreements = results.flatMap(data => data.agreementAssetsResults);
-      
-      // dispatch(setAgreements(data.agreementAssetsResults));
+      const agreements = results.flatMap(result => result.data.agreementAssetsResults);
+  
+      // Dispatch results for all emails
       dispatch(setAgreements({ 
-        results: data.agreementAssetsResults, 
-        email: email 
+        results: agreements,
       }));
-      setEmail(email); // Store email in context
+  
+      console.log('agreements', agreements);
+  
+      // Navigate to agreements list
       navigate("/agreementsList");
-      
+  
     } catch (error) {
       console.error("Bulk download error:", error);
       alert("An error occurred while fetching agreements. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };
+  };  
+  
 
   const handleApiCall = async (params) => {
     const { startDate, endDate, email, selectedStatuses, title} = params;
