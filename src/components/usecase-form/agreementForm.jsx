@@ -114,16 +114,23 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   
       // Await all API calls
       const results = await Promise.all(apiCalls);
-  
+      
+      // Group results by email
+      const groupedResults = results.reduce((acc, result) => {
+          acc[result.email] = result.data;
+          return acc;
+      }, {});
+
       // Combine results from each email
-      const agreements = results.flatMap(result => result.data.agreementAssetsResults);
+      //const agreements = results.flatMap(result => result.data.agreementAssetsResults);
   
       // Dispatch results for all emails
-      dispatch(setAgreements({ 
-        results: agreements,
+      dispatch(setAgreements({
+          results: groupedResults,
+          email: emails, // Maintain a list of processed emails
       }));
   
-      console.log('agreements', agreements);
+      console.log('Grouped Results:', groupedResults);
   
       // Navigate to agreements list
       navigate("/agreementsList");
@@ -138,29 +145,34 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   
 
   const handleApiCall = async (params) => {
-    const { startDate, endDate, email, selectedStatuses, title} = params;
-
-    
-    // Validate email and date range
-    if (null === email) {
-      setEmail(user.email);
+    const { startDate, endDate, email, selectedStatuses, title } = params;
+  
+    // Validate email
+    if (!email) {
+      alert("Email is required.");
+      return;
     }
+  
+    // Validate date range
     if (!validateDateRange(startDate, endDate)) {
       alert("End date must be after start date.");
       return;
     }
-
+  
     setIsLoading(true);
-
+  
     try {
       const apiUrl = `/api/search`;
-      const reqBody = { 
-        startDate: formatToISO(startDate), // Convert to ISO string
-        endDate: formatToISO(endDate), 
+  
+      const reqBody = {
+        startDate: formatToISO(startDate),
+        endDate: formatToISO(endDate),
         email,
         title,
-        selectedStatuses
+        selectedStatuses,
       };
+  
+      // API call for the single email
       const response = await fetch(apiUrl, {
         method: "POST",
         headers: {
@@ -169,22 +181,29 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
         },
         body: JSON.stringify(reqBody),
       });
-
+  
       if (response.ok) {
         const data = await response.json();
-        console.log("Fetched Agreements Data:", data);
-        
-       // dispatch(setAgreements(data.agreementAssetsResults));
-        dispatch(setAgreements({ 
-          results: data.agreementAssetsResults, 
-          email: email 
+  
+        // Group results similarly to handleBulkUserAgreements
+        const groupedResults = {
+          [email]: data,
+        };
+  
+        console.log('Grouped Results:', groupedResults);
+  
+        // Dispatch the results with the grouped structure
+        dispatch(setAgreements({
+          results: groupedResults,
+          email: [email], // Maintain an array format for consistency
         }));
-        setEmail(email); // Store email in context
+  
+        // Navigate to agreements list
         navigate("/agreementsList");
       } else if (response.status === 401) {
         alert("Session expired. Redirecting to login...");
         navigate("/login");
-      }  else {
+      } else {
         console.error("API call failed", response.statusText);
         alert("Failed to fetch agreements. Please try again later.");
       }
@@ -195,6 +214,9 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
       setIsLoading(false);
     }
   };
+  
+  
+  
   const isButtonEnabled = selectedFiles.length > 0 && selectedStatuses.size > 0;
   return (
     <Accordion>

@@ -332,11 +332,12 @@ async function checkSession(req, res){
 }
 
 // Reusable function to process batches
-async function processBatch(batchIds, apiClient, req, zip, email, getEndpoint, getFileName) {
+async function processBatch(batchIds, apiClient, req, zip, emails, getEndpoint, getFileName) {
   await Promise.all(
-    batchIds.map(async (id) => {
+    batchIds.map(async (id, index) => {
       const endpoint = getEndpoint(id);
-      console.log("Processing endpoint:", endpoint);
+      const email = Array.isArray(emails) ? emails[index] : emails; // Handle both single and multiple emails
+      console.log("Processing endpoint:", endpoint, "for email:", email);
 
       try {
         // Construct headers dynamically
@@ -354,14 +355,15 @@ async function processBatch(batchIds, apiClient, req, zip, email, getEndpoint, g
           responseType: 'arraybuffer', // Required for binary data
         });
 
-        const filename = getFileName(id); // Use the parameterized file naming logic
+        const filename = `${email}/${getFileName(id)}`; // Add email as folder prefix for better organization
         zip.file(filename, response.data, { binary: true });
       } catch (err) {
-        console.error(`Error processing ${id}:`, err.message);
+        console.error(`Error processing ${id} for email ${email}:`, err.message);
       }
     })
   );
 }
+
 app.post('/api/download-auditReport', async (req, res) => {
   const { ids, email } = req.body;
   const zip = new JSZip();
@@ -442,14 +444,15 @@ app.post('/api/download-formfields', async (req, res) => {
 
 app.post('/api/download-agreements', async (req, res) => {
   const { ids, email } = req.body;
+  console.log("email--------",email);
   const zip = new JSZip();
   const apiClient = createApiClient(req);
-  console.log('email:',email);
+  
   
   try {
     const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}agreements/${id}/combinedDocument`;;
     const getFileName = (id) => `agreement_${id}.pdf`;
-
+    console.log('ids:',ids);
     // Process IDs in batches
     for (let i = 0; i < ids.length; i += BATCH_SIZE) {
       console.log("current download value:::",i);

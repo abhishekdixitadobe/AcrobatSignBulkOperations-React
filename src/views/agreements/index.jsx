@@ -13,39 +13,51 @@ import {
 } from "@adobe/react-spectrum";
 import Footer from "../../components/footer";
 import { downloadFilesAsZip, downloadList } from "../../services/apiService";
-
 const AgreementsPage = () => {
-  //const agreements = useSelector((state) => state.agreements || []);
-  const { agreementAssetsResults, email } = useSelector((state) => state.agreements);
+  const { agreementAssetsResults } = useSelector((state) => state.agreements);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
   const authState = useSelector((state) => state.auth || {});
   const token = authState.token;
+
+  // Flatten the grouped results into an array
+  const flattenedAgreements = Object.entries(agreementAssetsResults || {}).flatMap(([email, result]) =>
+    (result.agreementAssetsResults || []).map((agreement) => ({
+      ...agreement,
+      email, // Add email to each agreement
+    }))
+  );
 
   const columns = [
     { name: "ID", uid: "id" },
     { name: "Agreement Name", uid: "name" },
     { name: "Status", uid: "status" },
+    { name: "Email", uid: "email" },
   ];
 
   const handleDownloadList = async (fileName) => {
     const idsToDownload =
       selectedKeys === "all"
-        ? agreementAssetsResults.map((agreement) => agreement.id)
+        ? flattenedAgreements.map((agreement) => agreement.id)
         : Array.from(selectedKeys);
 
-    await downloadList(idsToDownload, agreementAssetsResults, fileName);
+    await downloadList(idsToDownload, flattenedAgreements, fileName);
   };
-  const handleDownload = async (endpoint, fileName) => {
-    const idsToDownload =
-      selectedKeys === "all"
-        ? agreementAssetsResults.map((agreement) => agreement.id)
-        : Array.from(selectedKeys);
 
-    await downloadFilesAsZip(endpoint, idsToDownload, token, fileName, email);
+  const handleDownload = async (endpoint, fileName) => {
+    const selectedRows =
+      selectedKeys === "all"
+        ? flattenedAgreements
+        : flattenedAgreements.filter((agreement) => selectedKeys.has(agreement.id));
+
+    const idsToDownload = selectedRows.map((row) => row.id);
+    const emailsToDownload = selectedRows.map((row) => row.email);
+
+
+    await downloadFilesAsZip(endpoint, idsToDownload, token, fileName, emailsToDownload);
   };
 
   const showDeleteButton = process.env.REACT_APP_SHOW_DELETE === "true";
-  
+
   return (
     <Grid
       areas={["content", "footer"]}
@@ -56,7 +68,7 @@ const AgreementsPage = () => {
       marginTop={"size-200"}
     >
       <View gridArea="content" width="75%" marginX="auto" overflow="auto">
-        <Heading level={2}>Total Agreements: {agreementAssetsResults.length}</Heading>
+        <Heading level={2}>Total Agreements: {flattenedAgreements.length}</Heading>
         <TableView
           selectionMode="multiple"
           aria-label="Agreements Table"
@@ -73,12 +85,13 @@ const AgreementsPage = () => {
               </Column>
             )}
           </TableHeader>
-          <TableBody items={agreementAssetsResults}>
+          <TableBody items={flattenedAgreements}>
             {(item) => (
               <Row key={item.id}>
                 <Cell>{item.id || "N/A"}</Cell>
                 <Cell>{item.name || "N/A"}</Cell>
                 <Cell>{item.status || "N/A"}</Cell>
+                <Cell>{item.email || "N/A"}</Cell>
               </Row>
             )}
           </TableBody>
@@ -92,7 +105,7 @@ const AgreementsPage = () => {
           showAuditReport={true}
           showDelete={showDeleteButton}
           downloadList={async () => {
-            handleDownloadList("agreementsList.zip")
+            handleDownloadList("agreementsList.zip");
           }}
           downloadOnPress={async () =>
             handleDownload("/api/download-agreements", "agreements.zip")
