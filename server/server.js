@@ -18,6 +18,7 @@ const application_domain = process.env.application_host || 'localhost';
 const winston = require('winston');
 const { format } = require('winston');
 const DailyRotateFile = require('winston-daily-rotate-file');
+//const axiosRetry = require('axios-retry');
 
 
 const { URL, URLSearchParams } = require('url');
@@ -442,48 +443,70 @@ app.post('/api/download-formfields', async (req, res) => {
 });
 
 
+const MAX_RETRIES = 3; // Max retries for transient errors
+
 app.post('/api/download-agreements', async (req, res) => {
   const { agreements } = req.body; // Expecting an array of objects with id and email
   console.log("Agreements:", agreements);
 
   const zip = new JSZip();
-  const apiClient = createApiClient(req);
+
+  // Create a persistent Axios client
+  const apiClient = axios.create({
+    timeout: 60000, // 60 seconds timeout
+    httpsAgent: new https.Agent({ keepAlive: true }), // Enable persistent connections
+  });
+
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   try {
     const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}agreements/${id}/combinedDocument`;
     const getFileName = (id) => `agreement_${id}.pdf`;
 
-    // Process agreements in batches
-    for (let i = 0; i < agreements.length; i += BATCH_SIZE) {
-      const batch = agreements.slice(i, i + BATCH_SIZE);
-      await Promise.all(
-        batch.map(async (agreement) => {
-          const { id, email } = agreement;
-          console.log("Processing ID:", id, "with email:", email);
+    const processAgreement = async (agreement, attempt = 1) => {
+      const { id, email } = agreement;
+      console.log(`Processing ID: ${id}, Email: ${email}, Attempt: ${attempt}`);
 
-          try {
-            const headers = {
-              'Authorization': `Bearer ${req.session.tokens.accessToken}`,
-              'Content-Type': 'application/json',
-            };
+      try {
+        const headers = {
+          'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        };
 
-            if (email) {
-              headers['x-api-user'] = `email:${email}`;
-            }
+        if (email) {
+          headers['x-api-user'] = `email:${email}`;
+        }
 
-            const endpoint = getEndpoint(id);
-            const response = await apiClient.get(endpoint, {
-              headers: headers,
-              responseType: 'arraybuffer',
-            });
+        const response = await apiClient.get(getEndpoint(id), {
+          headers: headers,
+          responseType: 'arraybuffer',
+        });
 
-            const filename = `${email}/${getFileName(id)}`;
-            zip.file(filename, response.data, { binary: true });
-          } catch (err) {
-            console.error(`Error processing ${id} for email ${email}:`, err.message);
-          }
-        })
-      );
+        const filename = `${email}/${getFileName(id)}`;
+        zip.file(filename, response.data, { binary: true });
+      } catch (error) {
+        if (attempt < MAX_RETRIES) {
+          console.warn(`Retrying ID: ${id}, Email: ${email}, Attempt: ${attempt + 1}`);
+          await delay(attempt * 1000); // Exponential backoff
+          return processAgreement(agreement, attempt + 1);
+        }
+        console.error(`Failed to process ID: ${id}, Email: ${email} after ${attempt} attempts`);
+        throw error;
+      }
+    };
+
+    let batchSize = BATCH_SIZE;
+    for (let i = 0; i < agreements.length; i += batchSize) {
+      const batch = agreements.slice(i, i + batchSize);
+
+      try {
+        await Promise.all(batch.map((agreement) => processAgreement(agreement)));
+        await delay(2000); // Add a delay between batches to avoid overwhelming the server
+      } catch (batchError) {
+        console.error("Error in batch processing:", batchError.message);
+        batchSize = Math.max(10, Math.floor(batchSize / 2)); // Reduce batch size dynamically
+        console.warn(`Reducing batch size to ${batchSize}`);
+      }
     }
 
     // Generate the ZIP file and send it to the client
@@ -498,7 +521,6 @@ app.post('/api/download-agreements', async (req, res) => {
     res.status(500).json({ error: "Failed to fetch files." });
   }
 });
-
 
 
 app.post('/api/download-templateFormfields', async (req, res) => {
