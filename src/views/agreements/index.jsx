@@ -35,15 +35,6 @@ const AgreementsPage = () => {
   ];
 
   const handleDownloadList = async (fileName) => {
-    const idsToDownload =
-      selectedKeys === "all"
-        ? flattenedAgreements.map((agreement) => agreement.id)
-        : Array.from(selectedKeys);
-
-    await downloadList(idsToDownload, flattenedAgreements, fileName);
-  };
-
-  const handleDownload = async (endpoint, fileName) => {
     const selectedRows =
       selectedKeys === "all"
         ? flattenedAgreements
@@ -52,8 +43,22 @@ const AgreementsPage = () => {
     const idsToDownload = selectedRows.map((row) => row.id);
     const emailsToDownload = selectedRows.map((row) => row.email);
 
+    await downloadList(idsToDownload, flattenedAgreements, fileName, emailsToDownload);
+  };
 
-    await downloadFilesAsZip(endpoint, idsToDownload, token, fileName, emailsToDownload);
+  const handleDownload = async (endpoint, fileName) => {
+    const selectedRows =
+    selectedKeys === "all"
+      ? flattenedAgreements
+      : flattenedAgreements.filter((agreement) => selectedKeys.has(agreement.id));
+
+    const agreementsToDownload = selectedRows.map((row) => ({
+      id: row.id,
+      email: row.email,
+    }));
+
+
+    await downloadFilesAsZip(endpoint, agreementsToDownload, token, fileName, flattenedAgreements);
   };
 
   const showDeleteButton = process.env.REACT_APP_SHOW_DELETE === "true";

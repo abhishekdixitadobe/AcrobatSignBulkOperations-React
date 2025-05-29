@@ -332,12 +332,11 @@ async function checkSession(req, res){
 }
 
 // Reusable function to process batches
-async function processBatch(batchIds, apiClient, req, zip, emails, getEndpoint, getFileName) {
+async function processBatch(batchIds, apiClient, req, zip, emailMap, getEndpoint, getFileName) {
   await Promise.all(
-    batchIds.map(async (id, index) => {
-      const endpoint = getEndpoint(id);
-      const email = Array.isArray(emails) ? emails[index] : emails; // Handle both single and multiple emails
-      console.log("Processing endpoint:", endpoint, "for email:", email);
+    batchIds.map(async (id) => {
+      const email = emailMap[id]; // Fetch the email associated with this ID
+      console.log("Processing ID:", id, "for email:", email);
 
       try {
         // Construct headers dynamically
@@ -350,12 +349,13 @@ async function processBatch(batchIds, apiClient, req, zip, emails, getEndpoint, 
           headers['x-api-user'] = `email:${email}`;
         }
 
+        const endpoint = getEndpoint(id);
         const response = await apiClient.get(endpoint, {
           headers: headers,
           responseType: 'arraybuffer', // Required for binary data
         });
 
-        const filename = `${email}/${getFileName(id)}`; // Add email as folder prefix for better organization
+        const filename = `${email}/${getFileName(id)}`; // Organize files by email
         zip.file(filename, response.data, { binary: true });
       } catch (err) {
         console.error(`Error processing ${id} for email ${email}:`, err.message);
@@ -443,40 +443,56 @@ app.post('/api/download-formfields', async (req, res) => {
 
 
 app.post('/api/download-agreements', async (req, res) => {
-  const { ids, email } = req.body;
-  console.log("email--------",email);
+  const { agreements } = req.body; // Expecting an array of objects with id and email
+  console.log("Agreements:", agreements);
+
   const zip = new JSZip();
   const apiClient = createApiClient(req);
-  
-  
+
   try {
-    const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}agreements/${id}/combinedDocument`;;
+    const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}agreements/${id}/combinedDocument`;
     const getFileName = (id) => `agreement_${id}.pdf`;
-    console.log('ids:',ids);
-    // Process IDs in batches
-    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-      console.log("current download value:::",i);
-      const batch = ids.slice(i, i + BATCH_SIZE);
-      await processBatch(batch, apiClient, req, zip, email, getEndpoint, getFileName); // Process each batch sequentially
+
+    // Process agreements in batches
+    for (let i = 0; i < agreements.length; i += BATCH_SIZE) {
+      const batch = agreements.slice(i, i + BATCH_SIZE);
+      await Promise.all(
+        batch.map(async (agreement) => {
+          const { id, email } = agreement;
+          console.log("Processing ID:", id, "with email:", email);
+
+          try {
+            const headers = {
+              'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+              'Content-Type': 'application/json',
+            };
+
+            if (email) {
+              headers['x-api-user'] = `email:${email}`;
+            }
+
+            const endpoint = getEndpoint(id);
+            const response = await apiClient.get(endpoint, {
+              headers: headers,
+              responseType: 'arraybuffer',
+            });
+
+            const filename = `${email}/${getFileName(id)}`;
+            zip.file(filename, response.data, { binary: true });
+          } catch (err) {
+            console.error(`Error processing ${id} for email ${email}:`, err.message);
+          }
+        })
+      );
     }
 
-    // Log user activity
-    const userId = req.session.userId;
-    const userEmail = req.session.userEmail;
-    logger.info('User Activity', {
-      userId: userId,
-      email: userEmail,
-      action: 'Download Agreements',
-    });
-
-    // Send the ZIP file with all the downloaded agreements
+    // Generate the ZIP file and send it to the client
     const content = await zip.generateAsync({ type: 'nodebuffer' });
     res.set({
       'Content-Type': 'application/zip',
-      'Content-Disposition': 'attachment; filename="agreements.zip"'
+      'Content-Disposition': 'attachment; filename="agreements.zip"',
     });
     res.send(content);
-
   } catch (error) {
     console.error("Error fetching files:", error.message);
     res.status(500).json({ error: "Failed to fetch files." });
@@ -602,6 +618,7 @@ app.post('/api/search', async (req, res) => {
               status: selectedStatuses,
               type: ["AGREEMENT", "MEGASIGN_CHILD","WIDGET_INSTANCE","MEGASIGN_PARENT","LIBRARY_TEMPLATE","WIDGET"],
               visibility: "SHOW_ALL",
+              role: ["SENDER","SIGNER","APPROVER","ACCEPTOR","CERTIFIED_RECIPIENT"],
             },
           },
           {

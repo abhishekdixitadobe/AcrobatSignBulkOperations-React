@@ -38,14 +38,14 @@ const apiCall = async (endpoint, method, token, body) => {
  * @param {string} token - Authorization token for the API request.
  * @param {string} fileName - Name of the ZIP file to save.
  */
-export const downloadFilesAsZip = async (endpoint, ids, token, fileName, email) => {
-  if (ids.length === 0) {
+export const downloadFilesAsZip = async (endpoint, agreementsToDownload, token, fileName, flattenedAgreements) => {
+  if (agreementsToDownload.length === 0) {
     alert("No items selected for download.");
     return;
   }
 
   try {
-    const response = await apiCall(endpoint, "POST", token, { ids, email });
+    const response = await apiCall(endpoint, "POST", token, {agreements: agreementsToDownload});
 
     // Convert response to Blob and download as a ZIP file
     const blob = await response.blob();
@@ -56,7 +56,7 @@ export const downloadFilesAsZip = async (endpoint, ids, token, fileName, email) 
   }
 };
 
-export const downloadList = async (ids, agreements, fileName) => {
+export const downloadList = async (ids, agreements, fileName, emailsToDownload) => {
   if (ids.length === 0) {
     alert("No items selected for download.");
     return;
@@ -65,22 +65,24 @@ export const downloadList = async (ids, agreements, fileName) => {
   try {
     const zip = new JSZip();
 
-     // Filter selected widgets based on selected keys
-     const selectedAgreements = agreements.filter(agreement => agreement && ids.includes(agreement.id));
+    // Filter selected agreements based on selected keys
+    const selectedAgreements = agreements.filter(
+      (agreement) => agreement && ids.includes(agreement.id)
+    );
 
-     // Convert selected widgets to CSV format
-     let csvContent = "ID,Agreement Name,Status\n";
-     selectedAgreements.forEach(agreement => {
-       csvContent += `${agreement.id},${agreement.name},${agreement.status}\n`;
-     });
+    // Convert selected agreements to CSV format
+    let csvContent = "ID,Agreement Name,Status,Email\n"; // Added "Email" column header
+    selectedAgreements.forEach((agreement, index) => {
+      const email = emailsToDownload[index]; // Match email by index
+      csvContent += `${agreement.id},${agreement.name},${agreement.status},${email}\n`; // Include email in each row
+    });
 
-     // Add CSV content to the ZIP file
-     zip.file("selected_agreements.csv", csvContent);
+    // Add CSV content to the ZIP file
+    zip.file("selected_agreements.csv", csvContent);
 
-     // Generate the ZIP file and trigger download
-     const blob = await zip.generateAsync({ type: "blob" });
-     saveAs(blob, "selected_agreements.zip");
-
+    // Generate the ZIP file and trigger download
+    const blob = await zip.generateAsync({ type: "blob" });
+    saveAs(blob, fileName || "selected_agreements.zip"); // Use `fileName` parameter for zip name
 
   } catch (error) {
     console.error("Download failed:", error);

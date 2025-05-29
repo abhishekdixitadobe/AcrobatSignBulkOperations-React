@@ -67,7 +67,6 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
     setIsLoading(true);
   
     try {
-      // Load and parse the CSV file
       const emails = await readCSV(selectedFiles);
   
       if (emails.length === 0) {
@@ -77,8 +76,9 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
   
       const apiUrl = `/api/search`;
   
-      // Map API calls for all emails
-      const apiCalls = emails.map(email => {
+      // Process emails and group results in a single step
+      const groupedResults = {};
+      const apiCalls = emails.map(async (email) => {
         const reqBody = {
           startDate: formatToISO(startDate),
           endDate: formatToISO(endDate),
@@ -87,61 +87,49 @@ const AgreementForm = ({onChange, setUploadFiles}) => {
           selectedStatuses,
         };
   
-        return fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${authState.token}`,
-          },
-          body: JSON.stringify(reqBody),
-        })
-          .then(response => {
-            if (response.ok) {
-              return response.json();
-            }
-            if (response.status === 401) {
-              alert("Session expired. Redirecting to login...");
-              navigate("/login");
-              throw new Error("Unauthorized");
-            }
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${authState.token}`,
+            },
+            body: JSON.stringify(reqBody),
+          });
+  
+          if (response.ok) {
+            const data = await response.json();
+            groupedResults[email] = data; // Group results inside the loop
+          } else if (response.status === 401) {
+            alert("Session expired. Redirecting to login...");
+            navigate("/login");
+            throw new Error("Unauthorized");
+          } else {
             throw new Error(`Failed to fetch for ${email}`);
-          })
-          .then(parsedData => ({
-            email,
-            data: parsedData, // Ensure parsed data is attached here
-          }));
+          }
+        } catch (error) {
+          console.error(`Error processing ${email}:`, error);
+        }
       });
   
-      // Await all API calls
-      const results = await Promise.all(apiCalls);
-      
-      // Group results by email
-      const groupedResults = results.reduce((acc, result) => {
-          acc[result.email] = result.data;
-          return acc;
-      }, {});
-
-      // Combine results from each email
-      //const agreements = results.flatMap(result => result.data.agreementAssetsResults);
+      await Promise.all(apiCalls);
   
-      // Dispatch results for all emails
+      // Dispatch grouped results
       dispatch(setAgreements({
-          results: groupedResults,
-          email: emails, // Maintain a list of processed emails
+        results: groupedResults,
+        email: emails, // List of processed emails
       }));
   
       console.log('Grouped Results:', groupedResults);
-  
-      // Navigate to agreements list
       navigate("/agreementsList");
-  
     } catch (error) {
       console.error("Bulk download error:", error);
       alert("An error occurred while fetching agreements. Please try again.");
     } finally {
       setIsLoading(false);
     }
-  };  
+  };
+  
   
 
   const handleApiCall = async (params) => {
