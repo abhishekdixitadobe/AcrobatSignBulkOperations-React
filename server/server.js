@@ -365,86 +365,161 @@ async function processBatch(batchIds, apiClient, req, zip, emailMap, getEndpoint
   );
 }
 
+
+const MAX_RETRIES = 3; // Max retries for transient errors
 app.post('/api/download-auditReport', async (req, res) => {
-  const { ids, email } = req.body;
+  const { agreements } = req.body; // Expecting an array of objects with id and email
+  console.log("Agreements:", agreements);
+
   const zip = new JSZip();
-  const apiClient = createApiClient(req);
+
+  // Create a persistent Axios client
+  const apiClient = axios.create({
+    timeout: 60000, // 60 seconds timeout
+    httpsAgent: new https.Agent({ keepAlive: true }), // Enable persistent connections
+  });
+
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   try {
     const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}agreements/${id}/auditTrail`;
     const getFileName = (id) => `auditTrail_${id}.csv`;
 
-    // Process IDs in batches
-    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-      console.log("current download value:::",i);
-      const batch = ids.slice(i, i + BATCH_SIZE);
-      await processBatch(batch, apiClient, req, zip, email, getEndpoint, getFileName); // Process each batch sequentially
+    const processAgreement = async (agreement, attempt = 1) => {
+      const { id, email } = agreement;
+      console.log(`Processing ID: ${id}, Email: ${email}, Attempt: ${attempt}`);
+
+      try {
+        const headers = {
+          'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        };
+
+        if (email) {
+          headers['x-api-user'] = `email:${email}`;
+        }
+
+        const response = await apiClient.get(getEndpoint(id), {
+          headers: headers,
+          responseType: 'arraybuffer',
+        });
+
+        const filename = `${email}/${getFileName(id)}`;
+        zip.file(filename, response.data, { binary: true });
+      } catch (error) {
+        if (attempt < MAX_RETRIES) {
+          console.warn(`Retrying ID: ${id}, Email: ${email}, Attempt: ${attempt + 1}`);
+          await delay(attempt * 1000); // Exponential backoff
+          return processAgreement(agreement, attempt + 1);
+        }
+        console.error(`Failed to process ID: ${id}, Email: ${email} after ${attempt} attempts`);
+        throw error;
+      }
+    };
+
+    let batchSize = BATCH_SIZE;
+    for (let i = 0; i < agreements.length; i += batchSize) {
+      const batch = agreements.slice(i, i + batchSize);
+
+      try {
+        await Promise.all(batch.map((agreement) => processAgreement(agreement)));
+        await delay(2000); // Add a delay between batches to avoid overwhelming the server
+      } catch (batchError) {
+        console.error("Error in batch processing:", batchError.message);
+        batchSize = Math.max(10, Math.floor(batchSize / 2)); // Reduce batch size dynamically
+        console.warn(`Reducing batch size to ${batchSize}`);
+      }
     }
 
-    // Log user activity
-    const userId = req.session.userId;
-    const userEmail = req.session.userEmail;
-    logger.info('User Activity', {
-      userId: userId,
-      email: userEmail,
-      action: 'Download Audit Report',
-    });
-
-    // Generate and send the ZIP file
+    // Generate the ZIP file and send it to the client
     const content = await zip.generateAsync({ type: 'nodebuffer' });
     res.set({
       'Content-Type': 'application/zip',
       'Content-Disposition': 'attachment; filename="auditReport.zip"',
     });
     res.send(content);
-
   } catch (error) {
-    console.error("Error fetching audit reports:", error.message);
-    res.status(500).json({ error: "Failed to fetch audit reports." });
+    console.error("Error fetching files:", error.message);
+    res.status(500).json({ error: "Failed to fetch files." });
   }
 });
 
-
 app.post('/api/download-formfields', async (req, res) => {
-  const { ids, email } = req.body;
+  const { agreements } = req.body; // Expecting an array of objects with id and email
+  console.log("Agreements:", agreements);
+
   const zip = new JSZip();
-  const apiClient = createApiClient(req);
+
+  // Create a persistent Axios client
+  const apiClient = axios.create({
+    timeout: 60000, // 60 seconds timeout
+    httpsAgent: new https.Agent({ keepAlive: true }), // Enable persistent connections
+  });
+
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   try {
     const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}agreements/${id}/formData`;
     const getFileName = (id) => `agreement_${id}.csv`;
 
-    // Process IDs in batches
-    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-      console.log("current download value:::",i);
-      const batch = ids.slice(i, i + BATCH_SIZE);
-      await processBatch(batch, apiClient, req, zip, email, getEndpoint, getFileName); // Process each batch sequentially
+    const processAgreement = async (agreement, attempt = 1) => {
+      const { id, email } = agreement;
+      console.log(`Processing ID: ${id}, Email: ${email}, Attempt: ${attempt}`);
+
+      try {
+        const headers = {
+          'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        };
+
+        if (email) {
+          headers['x-api-user'] = `email:${email}`;
+        }
+
+        const response = await apiClient.get(getEndpoint(id), {
+          headers: headers,
+          responseType: 'arraybuffer',
+        });
+
+        const filename = `${email}/${getFileName(id)}`;
+        zip.file(filename, response.data, { binary: true });
+      } catch (error) {
+        if (attempt < MAX_RETRIES) {
+          console.warn(`Retrying ID: ${id}, Email: ${email}, Attempt: ${attempt + 1}`);
+          await delay(attempt * 1000); // Exponential backoff
+          return processAgreement(agreement, attempt + 1);
+        }
+        console.error(`Failed to process ID: ${id}, Email: ${email} after ${attempt} attempts`);
+        throw error;
+      }
+    };
+
+    let batchSize = BATCH_SIZE;
+    for (let i = 0; i < agreements.length; i += batchSize) {
+      const batch = agreements.slice(i, i + batchSize);
+
+      try {
+        await Promise.all(batch.map((agreement) => processAgreement(agreement)));
+        await delay(2000); // Add a delay between batches to avoid overwhelming the server
+      } catch (batchError) {
+        console.error("Error in batch processing:", batchError.message);
+        batchSize = Math.max(10, Math.floor(batchSize / 2)); // Reduce batch size dynamically
+        console.warn(`Reducing batch size to ${batchSize}`);
+      }
     }
 
-    // Log user activity
-    const userId = req.session.userId;
-    const userEmail = req.session.userEmail;
-    logger.info('User Activity', {
-      userId: userId,
-      email: userEmail,
-      action: 'Download Form Fields',
-    });
-
-    // Generate and send the ZIP file
+    // Generate the ZIP file and send it to the client
     const content = await zip.generateAsync({ type: 'nodebuffer' });
     res.set({
       'Content-Type': 'application/zip',
-      'Content-Disposition': 'attachment; filename="formfields.zip"',
+      'Content-Disposition': 'attachment; filename="agreements.zip"',
     });
     res.send(content);
-
   } catch (error) {
-    console.error("Error fetching form fields:", error.message);
-    res.status(500).json({ error: "Failed to fetch form fields." });
+    console.error("Error fetching files:", error.message);
+    res.status(500).json({ error: "Failed to fetch files." });
   }
 });
-
-
-const MAX_RETRIES = 3; // Max retries for transient errors
-
 app.post('/api/download-agreements', async (req, res) => {
   const { agreements } = req.body; // Expecting an array of objects with id and email
   console.log("Agreements:", agreements);
