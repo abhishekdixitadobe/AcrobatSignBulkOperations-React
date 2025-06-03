@@ -37,7 +37,7 @@
   "dependencies": {
     "@adobe/aio-lib-photoshop-api": "^1.1.0",
     "@adobe/react-spectrum": "^3.37.1",
-    "@aws-sdk/client-s3": "^3.507.0",
+    "@aws-sdk/client-s3": "^3.697.0",
     "@aws-sdk/s3-request-presigner": "^3.507.0",
     "@babel/preset-react": "^7.23.3",
     "@craco/craco": "^7.1.0",
