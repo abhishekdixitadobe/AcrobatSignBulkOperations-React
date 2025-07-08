@@ -23,51 +23,57 @@ const TemplateForm = ({onChange, setUploadFiles}) => {
 
     const handleApiCall = async (params) => {
         const { startDate, endDate } = params;
-    
-        // Ensure file upload exists
-        /*if (!isFilled1) {
-          alert("Please upload a file containing emails.");
-          return;
-        }*/
-      
-        try {
-          // Load and parse the CSV file
+        try{
           const emails = await readCSV(selectedFiles);
-      
-          if (emails.length === 0) {
-            alert("No valid email addresses found in the file.");
-            return;
-          }
-      
-          const apiUrl = `/api/libraryDocuments`;
-          const apiCalls = emails.map(email => {
-            const reqBody = {
-              startDate: formatToISO(startDate),
-              endDate: formatToISO(endDate),
-              email,
-            };
             
-            return fetch(apiUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${authState.token}`,
-              },
-              body: JSON.stringify(reqBody),
-            }).then(response => {
-              if (response.ok) return response.json();
-              else throw new Error(`Failed to fetch for ${email}`);
-            });
-          });
-      
-          // Await all API calls
-          const results = await Promise.all(apiCalls);
+                if (emails.length === 0) {
+                  alert("No valid email addresses found in the file.");
+                  return;
+                }
+        const apiUrl = `/api/libraryDocuments`;
+        const groupedResults = {};
+              const apiCalls = emails.map(async (email) => {
+                const reqBody = {
+                  startDate: formatToISO(startDate),
+                  endDate: formatToISO(endDate),
+                  email
+                };
           
-          // Combine results from each email
-          const libraryDocuments = results.flatMap(data => data.libraryDocuments);
+                try {
+                  const response = await fetch(apiUrl, {
+                    method: "POST",
+                    headers: {
+                      "Content-Type": "application/json",
+                      "Authorization": `Bearer ${authState.token}`,
+                    },
+                    body: JSON.stringify(reqBody),
+                  });
           
-          dispatch(setTemplates(libraryDocuments));
-          navigate("/templates");
+                  if (response.ok) {
+                    const data = await response.json();
+                    groupedResults[email] = data; // Group results inside the loop
+                  } else if (response.status === 401) {
+                    alert("Session expired. Redirecting to login...");
+                    navigate("/login");
+                    throw new Error("Unauthorized");
+                  } else {
+                    throw new Error(`Failed to fetch for ${email}`);
+                  }
+                } catch (error) {
+                  console.error(`Error processing ${email}:`, error);
+                }
+              });
+          
+              await Promise.all(apiCalls);
+          
+              // Dispatch grouped results
+              dispatch(setTemplates({
+                results: groupedResults,
+                email: emails, // List of processed emails
+              }));
+          
+              console.log('Grouped Results:', groupedResults);
+              navigate("/templates");
           
         } catch (error) {
           console.error("Bulk download error:", error);

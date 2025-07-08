@@ -4,13 +4,12 @@ import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Headi
 import Footer from "../../components/footer";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-
+import { downloadFilesAsZip, downloadList } from "../../services/apiService";
 const TemplatePage = () => {  
-  const templates = useSelector((state) => state.templates || []);
-  const [selectedKeys, setSelectedKeys] = useState(new Set());
-  const authState = useSelector((state) => state.auth || {});
+  const agreementAssetsResults = useSelector((state) => state.templates || []);
+  //const [selectedKeys, setSelectedKeys] = useState(new Set());
+  //const authState = useSelector((state) => state.auth || {});
 
-  console.log("templates in TemplatePage:", templates);
 
   const columns = [
     { name: 'ID', uid: 'id' },
@@ -19,75 +18,48 @@ const TemplatePage = () => {
     { name: 'Sharing Mode', uid: 'sharingMode' },
     { name: 'Status', uid: 'status' },
   ];
+// const { agreementAssetsResults } = useSelector((state) => state.agreements);
+  const [selectedKeys, setSelectedKeys] = useState(new Set());
+  const authState = useSelector((state) => state.auth || {});
+  const token = authState.token;
 
-  const downloadFormField = async () => {
-    const idsToDownload = selectedKeys === "all"
-    ? templates.map((agreement) => agreement.id)
-    : Array.from(selectedKeys);
+  // Flatten the grouped results into an array
+  const templateAssetsResults = agreementAssetsResults.templateAssetsResults || {};
 
-    if (idsToDownload.length === 0) {
-      alert("No templates selected for download.");
-      return;
-    }
-
-    try {
-
-      // Send selected IDs to backend and get back the files
-      const response = await fetch('/api/download-templateFormfields', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${authState.token}`,
-        },
-        body: JSON.stringify({ ids: idsToDownload  }),
-      });
-      
-      if (!response.ok) throw new Error("Failed to fetch template formfields from the server.");
-
-          // Convert response to a Blob and download as a zip file
-      const blob = await response.blob();
-      saveAs(blob, "formfields.zip");
+const flattenedAgreements = Object.entries(templateAssetsResults).flatMap(
+  ([email, result]) =>
+    (result.libraryDocuments || []).map((doc) => ({
+      ...doc,
+      email, // append the email
+    }))
+);
 
 
-    } catch (error) {
-      console.error("Download Form fields failed:", error);
-      alert("Failed to download form fields. Please try again.");
-    }
+  const handleDownloadList = async (fileName) => {
+    const selectedRows =
+      selectedKeys === "all"
+        ? flattenedAgreements
+        : flattenedAgreements.filter((libraryDocument) => selectedKeys.has(libraryDocument.id));
+
+    const idsToDownload = selectedRows.map((row) => row.id);
+    const emailsToDownload = selectedRows.map((row) => row.email);
+
+    await downloadList(idsToDownload, flattenedAgreements, fileName, emailsToDownload);
   };
 
-  const downloadAllasZip = async () => {
-    const idsToDownload = selectedKeys === "all"
-    ? templates.map((agreement) => agreement.id)
-    : Array.from(selectedKeys);
+  const handleDownload = async (endpoint, fileName) => {
+    const selectedRows =
+    selectedKeys === "all"
+      ? flattenedAgreements
+      : flattenedAgreements.filter((libraryDocument) => selectedKeys.has(libraryDocument.id));
 
-    if (idsToDownload.length === 0) {
-      alert("No template selected for download.");
-      return;
-    }
-
-    try {
-
-      // Send selected IDs to backend and get back the files
-      const response = await fetch('/api/download-templateDocument', {
-        method: 'POST',
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${authState.token}`,
-        },
-        body: JSON.stringify({ ids: idsToDownload  }),
-      });
-      
-      if (!response.ok) throw new Error("Failed to fetch template document from the server.");
-
-          // Convert response to a Blob and download as a zip file
-      const blob = await response.blob();
-      saveAs(blob, "templates.zip");
+    const agreementsToDownload = selectedRows.map((row) => ({
+      id: row.id,
+      email: row.email,
+    }));
 
 
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert("Failed to download templates documents. Please try again.");
-    }
+    await downloadFilesAsZip(endpoint, agreementsToDownload, token, fileName, flattenedAgreements);
   };
 
 
@@ -101,7 +73,7 @@ const TemplatePage = () => {
       marginTop={"size-200"}
     >
     <View gridArea="content" width="75%" marginX="auto" overflow="auto">
-        <Heading level={2}>Total Templates: {templates.length}</Heading>
+        <Heading level={2}>Total Templates: {flattenedAgreements.length}</Heading>
         <TableView 
               selectionMode="multiple"
               aria-label="Template Table" 
@@ -118,7 +90,7 @@ const TemplatePage = () => {
             </Column>
           )}
         </TableHeader>
-        <TableBody items={templates}>
+        <TableBody items={flattenedAgreements}>
           {(item) => (
             <Row key={item.id}>
               <Cell>{item.id || "N/A"}</Cell>
@@ -131,18 +103,22 @@ const TemplatePage = () => {
         </TableBody>
       </TableView>
     </View>
-     <View gridArea="footer" width="100%" height={"size-1000"}>
-     <Footer
-       showDownload={true}
-       showDownloadFormField = {true}
-       downloadOnPress={async () => {
-         downloadAllasZip();
-       }}
-       downloadFormField={async () => {
-        downloadFormField();
-      }}
-     />
-   </View>
+    <View gridArea="footer" width="100%" height={"size-1000"}>
+        <Footer
+          showDownload={true}
+          showDownloadList={true}
+          showDownloadFormField={true}
+          downloadList={async () => {
+            handleDownloadList("templates.zip");
+          }}
+          downloadOnPress={async () =>
+            handleDownload("/api/download-templateDocument", "templates.zip")
+          }
+          downloadFormField={async () =>
+            handleDownload("/api/download-templateFormfields", "formfields.zip")
+          }
+        />
+      </View>
  </Grid>
   );
 };
