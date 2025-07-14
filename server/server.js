@@ -556,7 +556,7 @@ app.post('/api/download-agreements', async (req, res) => {
           headers: headers,
           responseType: 'arraybuffer',
         });
-
+        console.log("response:", response.data);
         const filename = `${email}/${getFileName(id)}`;
         zip.file(filename, response.data, { binary: true });
       } catch (error) {
@@ -599,10 +599,12 @@ app.post('/api/download-agreements', async (req, res) => {
 
 
 app.post('/api/download-templateFormfields', async (req, res) => {
+  console.log("Inside download-templateFormfields--")
   const { agreements } = req.body; // Expecting an array of objects with id and email
   console.log("Templates:", agreements);
 
   const zip = new JSZip();
+   // Create a persistent Axios client
   const apiClient = axios.create({
     timeout: 60000, // 60 seconds timeout
     httpsAgent: new https.Agent({ keepAlive: true }), // Enable persistent connections
@@ -619,19 +621,20 @@ app.post('/api/download-templateFormfields', async (req, res) => {
       try {
         const headers = {
           'Authorization': `Bearer ${req.session.tokens.accessToken}`,
-          'Content-Type': 'application/json',
+          'accept': 'text/csv',
         };
 
         if (email) {
           headers['x-api-user'] = `email:${email}`;
         }
-
+        console.log('getEndpoint(id)----',getEndpoint(id));
         const response = await apiClient.get(getEndpoint(id), {
           headers: headers,
           responseType: 'arraybuffer',
         });
 
         const filename = `${email}/${getFileName(id)}`;
+        console.log("response.data template formfields------", response.data);
         zip.file(filename, response.data, { binary: true });
       } catch (error) {
         if (attempt < MAX_RETRIES) {
