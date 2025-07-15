@@ -186,6 +186,7 @@ const DragAndDrop = (props) => {
                 variant="accent"
                 style="fill"
                 UNSAFE_style={{ marginTop: "20px" }}
+                UNSAFE_className={"cursorPointer"}
               >
                 Browse files
               </Button>

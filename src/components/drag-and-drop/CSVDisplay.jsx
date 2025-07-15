@@ -16,8 +16,10 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
 
   useEffect(() => {
     const parseAllCSVs = async () => {
-      const parsedData = await Promise.all(filledSrc.map(parseCSV));
-      setCsvData(parsedData.flat()); // Merge all data into one array
+      let parsedData = await Promise.all(filledSrc.map(parseCSV));
+      parsedData = parsedData.flat();
+      parsedData = parsedData.length > 0 ? parsedData.filter((el) => el[Object.keys(parsedData[0])]) : parsedData;
+      setCsvData(parsedData);
     };
 
     parseAllCSVs();
@@ -50,11 +52,7 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
         <TableView aria-label="File Display" width="100%" height="size-2400">
           <TableHeader>
             {columns.map((column) => (
-              <Column
-                key={column}
-                align="start"
-                allowsResizing
-              >
+              <Column key={column} align="start" allowsResizing>
                 {column.charAt(0).toUpperCase() + column.slice(1)}
               </Column>
             ))}
@@ -80,6 +78,7 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
           onPress={() => {
             handleRemoveIndividualClick(0);
           }}
+          UNSAFE_className={"cursorPointer"}
         >
           Remove
         </Button>

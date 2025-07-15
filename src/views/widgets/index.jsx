@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading} from '@adobe/react-spectrum';
+import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading, ToastQueue} from '@adobe/react-spectrum';
 import Footer from "../../components/footer";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -14,8 +14,6 @@ const WidgetsPage = () => {
     
   const navigate = useNavigate();
   const dispatch = useDispatch();
-
-  console.log("widgets in widgetsPage:", widgets);
 
   const columns = [
     { name: 'ID', uid: 'id' },
@@ -30,7 +28,7 @@ const WidgetsPage = () => {
       : Array.from(selectedKeys);
   
     if (idsToDownload.length === 0) {
-      alert("No widgets selected to fetch associated agreements.");
+      ToastQueue.negative("No widgets selected to fetch associated agreements.", { timeout: 5000 });
       return;
     }
   
@@ -52,10 +50,9 @@ const WidgetsPage = () => {
   
       // Extract userAgreementList
       const userAgreementList = data.userAgreementList || [];
-      console.log('Fetched userAgreementList:', userAgreementList);
   
       if (userAgreementList.length === 0) {
-        alert("No agreements found for the selected widgets.");
+        ToastQueue.negative("No agreements found for the selected widgets.", { timeout: 5000 });
         return;
       }
       dispatch(setWidgetsAgreements(userAgreementList));
@@ -63,7 +60,7 @@ const WidgetsPage = () => {
   
     } catch (error) {
       console.error("Get agreements failed:", error);
-      alert("Failed to fetch agreements for the selected widgets. Please try again.");
+      ToastQueue.negative("Failed to fetch agreements for the selected widgets. Please try again.", { timeout: 5000 });
     }
   };
   
@@ -73,8 +70,8 @@ const WidgetsPage = () => {
     ? widgets.map((agreement) => agreement.id)
     : Array.from(selectedKeys);
 
-    if (idsToDownload.length === 0) {
-      alert("No widgets selected for download.");
+    if (idsToDownload.length === 0) {     
+      ToastQueue.negative("No widgets selected for download.", { timeout: 5000 });
       return;
     }
 
@@ -100,7 +97,7 @@ const WidgetsPage = () => {
 
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Failed to download templates documents. Please try again.");
+      ToastQueue.negative("Failed to download templates documents. Please try again.", { timeout: 5000});
     }
   };
 

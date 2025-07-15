@@ -1,95 +1,88 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading} from '@adobe/react-spectrum';
+import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading, ToastQueue } from "@adobe/react-spectrum";
 import Footer from "../../components/footer";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
-const TemplatePage = () => {  
+const TemplatePage = () => {
   const templates = useSelector((state) => state.templates || []);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
   const authState = useSelector((state) => state.auth || {});
 
-  console.log("templates in TemplatePage:", templates);
-
   const columns = [
-    { name: 'ID', uid: 'id' },
-    { name: 'Template Name', uid: 'name' },
-    { name: 'Owner Email', uid: 'ownerEmail' },
-    { name: 'Sharing Mode', uid: 'sharingMode' },
-    { name: 'Status', uid: 'status' },
+    { name: "ID", uid: "id" },
+    { name: "Template Name", uid: "name" },
+    { name: "Owner Email", uid: "ownerEmail" },
+    { name: "Sharing Mode", uid: "sharingMode" },
+    { name: "Status", uid: "status" },
   ];
 
   const downloadFormField = async () => {
     const idsToDownload = selectedKeys === "all"
-    ? templates.map((agreement) => agreement.id)
-    : Array.from(selectedKeys);
+      ? templates.map((agreement) => agreement.id)
+      : Array.from(selectedKeys);
 
     if (idsToDownload.length === 0) {
-      alert("No templates selected for download.");
+      ToastQueue.negative("No templates selected for download.", { timeout: 5000});
       return;
     }
 
     try {
-
       // Send selected IDs to backend and get back the files
-      const response = await fetch('/api/download-templateFormfields', {
-        method: 'POST',
+      const response = await fetch("/api/download-templateFormfields", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${authState.token}`,
+          Authorization: `Bearer ${authState.token}`,
         },
-        body: JSON.stringify({ ids: idsToDownload  }),
+        body: JSON.stringify({ ids: idsToDownload }),
       });
-      
-      if (!response.ok) throw new Error("Failed to fetch template formfields from the server.");
 
-          // Convert response to a Blob and download as a zip file
+      if (!response.ok)
+        throw new Error("Failed to fetch template formfields from the server.");
+
+      // Convert response to a Blob and download as a zip file
       const blob = await response.blob();
       saveAs(blob, "formfields.zip");
-
-
     } catch (error) {
       console.error("Download Form fields failed:", error);
-      alert("Failed to download form fields. Please try again.");
+      ToastQueue.negative("Failed to download form fields. Please try again.", { timeout: 5000 });
     }
   };
 
   const downloadAllasZip = async () => {
     const idsToDownload = selectedKeys === "all"
-    ? templates.map((agreement) => agreement.id)
-    : Array.from(selectedKeys);
+      ? templates.map((agreement) => agreement.id)
+      : Array.from(selectedKeys);
 
     if (idsToDownload.length === 0) {
-      alert("No template selected for download.");
+      ToastQueue.negative("No template selected for download.", { timeout: 5000 });
       return;
     }
 
     try {
-
       // Send selected IDs to backend and get back the files
-      const response = await fetch('/api/download-templateDocument', {
-        method: 'POST',
+      const response = await fetch("/api/download-templateDocument", {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${authState.token}`,
+          Authorization: `Bearer ${authState.token}`,
         },
-        body: JSON.stringify({ ids: idsToDownload  }),
+        body: JSON.stringify({ ids: idsToDownload }),
       });
-      
-      if (!response.ok) throw new Error("Failed to fetch template document from the server.");
 
-          // Convert response to a Blob and download as a zip file
+      if (!response.ok)
+        throw new Error("Failed to fetch template document from the server.");
+
+      // Convert response to a Blob and download as a zip file
       const blob = await response.blob();
       saveAs(blob, "templates.zip");
-
-
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Failed to download templates documents. Please try again.");
+      ToastQueue.negative("Failed to download templates documents. Please try again.", { timeout: 5000 });
     }
   };
-
 
   return (
     <Grid
@@ -100,50 +93,50 @@ const TemplatePage = () => {
       rows={["1fr", "auto"]}
       marginTop={"size-200"}
     >
-    <View gridArea="content" width="75%" marginX="auto" overflow="auto">
+      <View gridArea="content" width="75%" marginX="auto" overflow="auto">
         <Heading level={2}>Total Templates: {templates.length}</Heading>
-        <TableView 
-              selectionMode="multiple"
-              aria-label="Template Table" 
-              height="size-6000" 
-              gap="size-150" 
-              width="100%"
-              selectedKeys={selectedKeys}
-              onSelectionChange={setSelectedKeys}
+        <TableView
+          selectionMode="multiple"
+          aria-label="Template Table"
+          height="size-6000"
+          gap="size-150"
+          width="100%"
+          selectedKeys={selectedKeys}
+          onSelectionChange={setSelectedKeys}
         >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <Column key={column.uid} align="start">
-              {column.name}
-            </Column>
-          )}
-        </TableHeader>
-        <TableBody items={templates}>
-          {(item) => (
-            <Row key={item.id}>
-              <Cell>{item.id || "N/A"}</Cell>
-              <Cell>{item.name || "N/A"}</Cell>
-              <Cell>{item.ownerEmail || "N/A"}</Cell>
-              <Cell>{item.sharingMode || "N/A"}</Cell>
-              <Cell>{item.status || "N/A"}</Cell>
-            </Row>
-          )}
-        </TableBody>
-      </TableView>
-    </View>
-     <View gridArea="footer" width="100%" height={"size-1000"}>
-     <Footer
-       showDownload={true}
-       showDownloadFormField = {true}
-       downloadOnPress={async () => {
-         downloadAllasZip();
-       }}
-       downloadFormField={async () => {
-        downloadFormField();
-      }}
-     />
-   </View>
- </Grid>
+          <TableHeader columns={columns}>
+            {(column) => (
+              <Column key={column.uid} align="start">
+                {column.name}
+              </Column>
+            )}
+          </TableHeader>
+          <TableBody items={templates}>
+            {(item) => (
+              <Row key={item.id}>
+                <Cell>{item.id || "N/A"}</Cell>
+                <Cell>{item.name || "N/A"}</Cell>
+                <Cell>{item.ownerEmail || "N/A"}</Cell>
+                <Cell>{item.sharingMode || "N/A"}</Cell>
+                <Cell>{item.status || "N/A"}</Cell>
+              </Row>
+            )}
+          </TableBody>
+        </TableView>
+      </View>
+      <View gridArea="footer" width="100%" height={"size-1000"}>
+        <Footer
+          showDownload={true}
+          showDownloadFormField={true}
+          downloadOnPress={async () => {
+            downloadAllasZip();
+          }}
+          downloadFormField={async () => {
+            downloadFormField();
+          }}
+        />
+      </View>
+    </Grid>
   );
 };
 

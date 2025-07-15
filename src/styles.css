@@ -66,3 +66,7 @@ ul {
   margin: 0;
   list-style-position: inside;
 }
+
+.cursorPointer {
+  cursor: pointer !important;
+}

@@ -44,6 +44,7 @@ const Footer = (props) => {
             <Flex justifyContent="end">
               <ButtonGroup>
                 <Button
+                  UNSAFE_className="cursorPointer"
                   variant="secondary"
                   onPress={() => window.history.back()}
                   isDisabled={disabledBack}
@@ -53,6 +54,7 @@ const Footer = (props) => {
 
                 {showDownload && (
                   <Button
+                    UNSAFE_className="cursorPointer"
                     variant="cta"
                     isPending={isLoading.download}
                     onPress={() => handleAsyncAction(downloadOnPress, "download")}
@@ -63,6 +65,7 @@ const Footer = (props) => {
 
                 {showDownloadList && (
                   <Button
+                    UNSAFE_className="cursorPointer"
                     variant="cta"
                     isPending={isLoading.downloadList}
                     onPress={() =>
@@ -74,13 +77,18 @@ const Footer = (props) => {
                 )}
 
                 {showGetAgreements && (
-                  <Button variant="cta" onPress={agreementList}>
+                  <Button
+                    UNSAFE_className="cursorPointer"
+                    variant="cta"
+                    onPress={agreementList}
+                  >
                     Get Agreements
                   </Button>
                 )}
 
                 {showDownloadFormField && (
                   <Button
+                    UNSAFE_className="cursorPointer"
                     variant="cta"
                     isPending={isLoading.downloadFormField}
                     onPress={() =>
@@ -93,6 +101,7 @@ const Footer = (props) => {
 
                 {showAuditReport && (
                   <Button
+                    UNSAFE_className="cursorPointer"
                     variant="cta"
                     isPending={isLoading.auditReport}
                     onPress={() =>
@@ -105,6 +114,7 @@ const Footer = (props) => {
 
                 {showDelete && (
                   <Button
+                    UNSAFE_className="cursorPointer"
                     variant="cta"
                     isPending={isLoading.delete}
                     onPress={() => handleAsyncAction(deleteOnPress, "delete")}

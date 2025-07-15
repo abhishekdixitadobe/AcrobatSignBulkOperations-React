@@ -36,7 +36,7 @@ const App = () => {
     <Provider theme={defaultTheme} colorScheme="light">
       <BrowserRouter>
         <div className="applicationContentWrapper">
-          <ToastContainer />
+          <ToastContainer placement="top" />
           <Grid
             areas={["header header", "content content"]}
             columns={["1fr"]}
