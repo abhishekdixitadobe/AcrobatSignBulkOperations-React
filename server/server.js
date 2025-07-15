@@ -556,7 +556,7 @@ app.post('/api/download-agreements', async (req, res) => {
           headers: headers,
           responseType: 'arraybuffer',
         });
-
+        console.log("response:", response.data);
         const filename = `${email}/${getFileName(id)}`;
         zip.file(filename, response.data, { binary: true });
       } catch (error) {
@@ -599,86 +599,155 @@ app.post('/api/download-agreements', async (req, res) => {
 
 
 app.post('/api/download-templateFormfields', async (req, res) => {
-  const { ids, email } = req.body;
+  console.log("Inside download-templateFormfields--")
+  const { agreements } = req.body; // Expecting an array of objects with id and email
+  console.log("Templates:", agreements);
+
   const zip = new JSZip();
-  const apiClient = createApiClient(req);
+   // Create a persistent Axios client
+  const apiClient = axios.create({
+    timeout: 60000, // 60 seconds timeout
+    httpsAgent: new https.Agent({ keepAlive: true }), // Enable persistent connections
+  });
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
   try {
     const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/formData`;
     const getFileName = (id) => `template_${id}.csv`;
-      // Process IDs in batches
-    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-      console.log("current download value:::",i);
-      const batch = ids.slice(i, i + BATCH_SIZE);
-      await processBatch(batch, apiClient, req, zip, email, getEndpoint, getFileName); // Process each batch sequentially
+    const processAgreement = async (agreement, attempt = 1) => {
+      const { id, email } = agreement;
+      console.log(`Processing ID: ${id}, Email: ${email}, Attempt: ${attempt}`);
+
+      try {
+        const headers = {
+          'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          'accept': 'text/csv',
+        };
+
+        if (email) {
+          headers['x-api-user'] = `email:${email}`;
+        }
+        console.log('getEndpoint(id)----',getEndpoint(id));
+        const response = await apiClient.get(getEndpoint(id), {
+          headers: headers,
+          responseType: 'arraybuffer',
+        });
+
+        const filename = `${email}/${getFileName(id)}`;
+        console.log("response.data template formfields------", response.data);
+        zip.file(filename, response.data, { binary: true });
+      } catch (error) {
+        if (attempt < MAX_RETRIES) {
+          console.warn(`Retrying ID: ${id}, Email: ${email}, Attempt: ${attempt + 1}`);
+          await delay(attempt * 1000); // Exponential backoff
+          return processAgreement(agreement, attempt + 1);
+        }
+        console.error(`Failed to process ID: ${id}, Email: ${email} after ${attempt} attempts`);
+        throw error;
+      }
+    };
+
+    let batchSize = BATCH_SIZE;
+    for (let i = 0; i < agreements.length; i += batchSize) {
+      const batch = agreements.slice(i, i + batchSize);
+
+      try {
+        await Promise.all(batch.map((agreement) => processAgreement(agreement)));
+        await delay(2000); // Add a delay between batches to avoid overwhelming the server
+      } catch (batchError) {
+        console.error("Error in batch processing:", batchError.message);
+        batchSize = Math.max(10, Math.floor(batchSize / 2)); // Reduce batch size dynamically
+        console.warn(`Reducing batch size to ${batchSize}`);
+      }
     }
 
-    // Generate and send the ZIP file
+    // Generate the ZIP file and send it to the client
     const content = await zip.generateAsync({ type: 'nodebuffer' });
     res.set({
       'Content-Type': 'application/zip',
-      'Content-Disposition': 'attachment; filename="templateFormfields.zip"',
+      'Content-Disposition': 'attachment; filename="formfields.zip"',
     });
     res.send(content);
-
   } catch (error) {
-    console.error("Error fetching template form fields:", error.message);
-    res.status(500).json({ error: "Failed to fetch template form fields." });
+    console.error("Error fetching files:", error.message);
+    res.status(500).json({ error: "Failed to fetch files." });
   }
 });
 
 
 app.post('/api/download-templateDocument', async (req, res) => {
-  const { ids, email } = req.body;
+  const { agreements } = req.body; // Expecting an array of objects with id and email
+  console.log("Templates:", agreements);
+
   const zip = new JSZip();
-  const apiClient = createApiClient(req);
+  const apiClient = axios.create({
+    timeout: 60000, // 60 seconds timeout
+    httpsAgent: new https.Agent({ keepAlive: true }), // Enable persistent connections
+  });
+  const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 
   try {
-    // Function to process a batch of template document downloads
-    async function processBatch(batchIds) {
-      await Promise.all(
-        batchIds.map(async (id) => {
-          const endpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/combinedDocument`;
-          console.log("template download endpoint::", endpoint);
+    const getEndpoint = (id) => `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/combinedDocument`;
+    const getFileName = (id) => `template_${id}.pdf`;
+    const processAgreement = async (agreement, attempt = 1) => {
+      const { id, email } = agreement;
+      console.log(`Processing ID: ${id}, Email: ${email}, Attempt: ${attempt}`);
 
-          try {
-            const response = await apiClient.get(endpoint, {
-              headers: {
-                'Authorization': `Bearer ${req.session.tokens.accessToken}`, // Use the session token
-                'Content-Type': 'application/json',
-              },
-              responseType: 'arraybuffer', // Required for binary data
-            });
+      try {
+        const headers = {
+          'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        };
 
-            const filename = `template_${id}.pdf`; // Name the file as needed
-            zip.file(filename, response.data, { binary: true });
-          } catch (err) {
-            console.error(`Error fetching document for template ${id}:`, err.message);
-          }
-        })
-      );
+        if (email) {
+          headers['x-api-user'] = `email:${email}`;
+        }
+
+        const response = await apiClient.get(getEndpoint(id), {
+          headers: headers,
+          responseType: 'arraybuffer',
+        });
+
+        const filename = `${email}/${getFileName(id)}`;
+        zip.file(filename, response.data, { binary: true });
+      } catch (error) {
+        if (attempt < MAX_RETRIES) {
+          console.warn(`Retrying ID: ${id}, Email: ${email}, Attempt: ${attempt + 1}`);
+          await delay(attempt * 1000); // Exponential backoff
+          return processAgreement(agreement, attempt + 1);
+        }
+        console.error(`Failed to process ID: ${id}, Email: ${email} after ${attempt} attempts`);
+        throw error;
+      }
+    };
+
+    let batchSize = BATCH_SIZE;
+    for (let i = 0; i < agreements.length; i += batchSize) {
+      const batch = agreements.slice(i, i + batchSize);
+
+      try {
+        await Promise.all(batch.map((agreement) => processAgreement(agreement)));
+        await delay(2000); // Add a delay between batches to avoid overwhelming the server
+      } catch (batchError) {
+        console.error("Error in batch processing:", batchError.message);
+        batchSize = Math.max(10, Math.floor(batchSize / 2)); // Reduce batch size dynamically
+        console.warn(`Reducing batch size to ${batchSize}`);
+      }
     }
 
-    // Process IDs in batches
-    for (let i = 0; i < ids.length; i += BATCH_SIZE) {
-      const batch = ids.slice(i, i + BATCH_SIZE);
-      await processBatch(batch); // Process each batch sequentially
-    }
-
-    // Generate and send the ZIP file
+    // Generate the ZIP file and send it to the client
     const content = await zip.generateAsync({ type: 'nodebuffer' });
     res.set({
       'Content-Type': 'application/zip',
-      'Content-Disposition': 'attachment; filename="templateDocuments.zip"',
+      'Content-Disposition': 'attachment; filename="templates.zip"',
     });
     res.send(content);
-
   } catch (error) {
-    console.error("Error fetching template documents:", error.message);
-    res.status(500).json({ error: "Failed to fetch template documents." });
+    console.error("Error fetching files:", error.message);
+    res.status(500).json({ error: "Failed to fetch files." });
   }
-});
-
+}); 	
 
 app.post('/api/search', async (req, res) => { 
   console.log('Inside api/search');  

@@ -2,10 +2,14 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const templateSlice = createSlice({
   name: 'templateList',
-  initialState: [], // Initialize as an empty array
+  initialState: { 
+    templateAssetsResults: [], // Initialize as an empty array
+    email: "", // Initialize email as an empty string
+  },
   reducers: {
     setTemplates: (state, action) => {
-      return action.payload; // Replace the state with the incoming payload
+     state.templateAssetsResults = action.payload.results; // Update agreementAssetsResults
+     state.email = action.payload.email; // Update email
     },
   },
 });

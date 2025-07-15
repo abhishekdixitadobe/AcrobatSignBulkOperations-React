@@ -24,12 +24,6 @@ const TemplateForm = ({ onChange, setUploadFiles }) => {
   const handleApiCall = async (params) => {
     const { startDate, endDate } = params;
 
-    // Ensure file upload exists
-    /*if (!isFilled1) {
-          alert("Please upload a file containing emails.");
-          return;
-        }*/
-
     try {
       // Load and parse the CSV file
       const emails = await readCSV(selectedFiles);
@@ -40,35 +34,55 @@ const TemplateForm = ({ onChange, setUploadFiles }) => {
       }
 
       const apiUrl = `/api/libraryDocuments`;
-      const apiCalls = emails.map((email) => {
+      const groupedResults = {};
+
+      const apiCalls = emails.map(async (email) => {
         const reqBody = {
           startDate: formatToISO(startDate),
           endDate: formatToISO(endDate),
           email,
         };
 
-        return fetch(apiUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authState.token}`,
-          },
-          body: JSON.stringify(reqBody),
-        }).then((response) => {
-          if (response.ok) return response.json();
-          else throw new Error(`Failed to fetch for ${email}`);
-        });
+        try {
+          const response = await fetch(apiUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${authState.token}`,
+            },
+            body: JSON.stringify(reqBody),
+          });
+  
+          if (response.ok) {
+            const data = await response.json();
+            groupedResults[email] = data; // Group results inside the loop
+          } else if (response.status === 401) {
+            ToastQueue.negative("Session expired. Redirecting to login...", { timeout: 5000 });
+            navigate("/login");
+            throw new Error("Unauthorized");
+          } else {
+            throw new Error(`Failed to fetch for ${email}`);
+          }
+        } catch (error) {
+          console.error(`Error processing ${email}:`, error);
+        }
       });
 
       // Await all API calls
-      const results = await Promise.all(apiCalls);
+      await Promise.all(apiCalls);
 
-      // Combine results from each email
-      const libraryDocuments = results.flatMap((data) => data.libraryDocuments);
+      dispatch(setTemplates({
+        results: groupedResults,
+        email: emails, // List of processed emails
+      }));
 
-      dispatch(setTemplates(libraryDocuments));
+      const groupResultsKeys = Object.keys(groupedResults);
+      let totalResults = 0;
+      for (let i = 0; i < groupResultsKeys.length; i++) {
+        totalResults = totalResults + groupedResults[groupResultsKeys[i]]?.totalResults;
+      }
 
-      if (libraryDocuments.length < 1) {
+      if (!totalResults) {
         ToastQueue.info("No templates present for the users.", { timeout: 5000 });
         return;
       }
