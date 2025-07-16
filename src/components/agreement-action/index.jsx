@@ -11,11 +11,13 @@ const AgreementAction = ({ params, onAction, buttonText = "Submit", isDisabled, 
   return (
         <Button
           UNSAFE_style={{ whiteSpace: "nowrap" }}
+          UNSAFE_className="cursorPointer"
           variant="accent"
           style="fill"
           onPress={handleButtonClick}
           isDisabled={isDisabled}
           alignSelf="end"
+          marginTop="15px"
         >
           <Text>{buttonText}</Text>
         </Button>

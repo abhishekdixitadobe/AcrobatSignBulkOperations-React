@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer";
 import AgreementAction from "../../components/agreement-action";
+import { ToastQueue } from "@react-spectrum/toast";
 
 function Setup() {
 
@@ -15,6 +16,11 @@ function Setup() {
 
   const handleLogin = async (params) => {
     try {
+      if (!email || !password) {
+        ToastQueue.negative("Please enter valid credentials", {timeout: 5000});
+        return;
+      }
+
       const apiUrl = `/api/admin-login`;
       const reqBody = { 
         email,
@@ -30,20 +36,18 @@ function Setup() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Fetched Agreements Data:", data);
         
         dispatch(setAgreements(data.agreementAssetsResults));
         navigate("/agreementsList");
       } else {
         console.error("API call failed", response.statusText);
-        alert("Failed to fetch agreements. Please try again later.");
+        ToastQueue.negative("An error occurred. Please try again later.", {timeout: 5000});
       }
     } catch (error) {
       console.error("Error making API call:", error);
-      alert("An error occurred. Please try again later.");
+      ToastQueue.negative("An error occurred. Please try again later.", {timeout: 5000});
     } finally {
     }
-    console.log("Logging in...");
   };
 
   return (
@@ -58,7 +62,8 @@ function Setup() {
         alignItems="center"
         justifyContent="center"
       >
-          <Heading level={1}>Login</Heading>
+        <Form validationBehavior="native" isRequired necessityIndicator="label">
+          <Heading level={1} UNSAFE_style={{ textAlign: "center" }}>Login</Heading>
           <TextField
             label="Email"
             type="email"
@@ -79,9 +84,10 @@ function Setup() {
             params={{ email, password }}
             onAction={handleLogin}
             buttonText="Login"
-            isDisabled={!email}
+            // isDisabled={!email}
             heading="Bulk Operation Tool setup"
           />
+        </Form>
       </View>
       <View gridArea="footer" width="100%" height={"size-1000"}>
         <Footer

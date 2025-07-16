@@ -1,5 +1,6 @@
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
+import { ToastQueue } from "@react-spectrum/toast";
 
 /**
  * Generic API call method
@@ -40,7 +41,7 @@ const apiCall = async (endpoint, method, token, body) => {
  */
 export const downloadFilesAsZip = async (endpoint, agreementsToDownload, token, fileName, flattenedAgreements) => {
   if (agreementsToDownload.length === 0) {
-    alert("No items selected for download.");
+    ToastQueue.negative("No items selected for download.", { timeout: 5000 });
     return;
   }
 
@@ -52,13 +53,13 @@ export const downloadFilesAsZip = async (endpoint, agreementsToDownload, token, 
     saveAs(blob, fileName);
   } catch (error) {
     console.error(`Failed to download files from ${endpoint}:`, error);
-    alert("Download failed. Please try again.");
+    ToastQueue.negative("Download failed. Please try again.", { timeout: 5000 });
   }
 };
 
 export const downloadList = async (ids, agreements, fileName, emailsToDownload) => {
   if (ids.length === 0) {
-    alert("No items selected for download.");
+    ToastQueue.negative("No items selected for download.", { timeout: 5000 });
     return;
   }
 
@@ -86,6 +87,6 @@ export const downloadList = async (ids, agreements, fileName, emailsToDownload) 
 
   } catch (error) {
     console.error("Download failed:", error);
-    alert("Failed to download agreements documents. Please try again.");
+    ToastQueue.negative("Failed to download agreements documents. Please try again.", { timeout: 5000 });
   }
 };

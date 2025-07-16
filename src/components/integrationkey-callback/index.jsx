@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { login } from '../../redux/authReducer'; 
+import { ToastQueue } from '@react-spectrum/toast';
 
 const IntegrationKeyCallback = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const IntegrationKeyCallback = () => {
       const data = await response.json();
       
       if (data.userData) {
+        ToastQueue.positive("Logged In Successfully!!", { timeout: 5000 });
         dispatch(login({ token: data.authData, user: data.userData }));
         navigate('/'); // Redirect to home page
       } else {

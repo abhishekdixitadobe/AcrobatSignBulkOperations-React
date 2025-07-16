@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading} from '@adobe/react-spectrum';
+import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading, ToastQueue} from '@adobe/react-spectrum';
 import Footer from "../../components/footer";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
@@ -9,7 +9,6 @@ const WidgetsAgreementsPage = () => {
   const widgetsAgreements = useSelector((state) => state.widgetsAgreements || []);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
   const authState = useSelector((state) => state.auth || {});
-  console.log("Agreements in widgetsAgreementsPage:", widgetsAgreements);
 
   const columns = [
     { name: 'ID', uid: 'id' },
@@ -26,7 +25,7 @@ const WidgetsAgreementsPage = () => {
     : Array.from(selectedKeys);
 
     if (idsToDownload.length === 0) {
-      alert("No widgets selected for download.");
+      ToastQueue.negative("No widgets selected for download.", { timeout: 5000 });
       return;
     }
 
@@ -52,7 +51,7 @@ const WidgetsAgreementsPage = () => {
 
     } catch (error) {
       console.error("Download failed:", error);
-      alert("Failed to download templates documents. Please try again.");
+      ToastQueue.negative("Failed to download templates documents. Please try again.", { timeout: 5000 });
     }
   };
 
@@ -63,6 +62,7 @@ const WidgetsAgreementsPage = () => {
 
     if (idsToDownload.length === 0) {
       alert("No agreements selected for download.");
+      ToastQueue.negative("No agreements selected for download.", { timeout: 5000 });
       return;
     }
 
@@ -87,7 +87,7 @@ const WidgetsAgreementsPage = () => {
 
     } catch (error) {
       console.error("Download Form fields failed:", error);
-      alert("Failed to download form fields. Please try again.");
+      ToastQueue.negative("Failed to download form fields. Please try again.", { timeout: 5000 });
     }
   };
   const downloadAgreeements = async () => {
@@ -97,6 +97,7 @@ const WidgetsAgreementsPage = () => {
 
     if (idsToDownload.length === 0) {
       alert("No agreements selected for download.");
+      ToastQueue.negative("No agreements selected for download.", { timeout: 5000 });
       return;
     }
 
@@ -121,6 +122,7 @@ const WidgetsAgreementsPage = () => {
     } catch (error) {
       console.error("Download failed:", error);
       alert("Failed to download agreements. Please try again.");
+      ToastQueue.negative("Failed to download agreements. Please try again.", { timeout: 5000 });
     }
   };
 

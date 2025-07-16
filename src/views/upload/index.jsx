@@ -10,7 +10,7 @@ import { setDownloadURLs, resetURLs } from "../../redux/downloadURLs";
 
 const Upload = () => {
   const location = useLocation();
-  console.log(location.state);
+  // console.log(location.state);
   const configs = location.state.configs;
   const heading = location.state.heading;
   const [formData, setFormData] = useState({});
@@ -64,7 +64,7 @@ const Upload = () => {
       case "/api/webforms":
         results = await agreements(uploadFiles);
         break;
-        default:
+      default:
         break;
     }
     dispatch(setDownloadURLs(results));
@@ -82,9 +82,7 @@ const Upload = () => {
         {!isExecuted ? (
           <>
             <Heading level={1}>{heading}</Heading>
-            <Text>
-            Agreements will be fetched between this date range.
-            </Text>
+            <Text>Agreements will be fetched between the date range.</Text>
             <Form necessityIndicator="label">
               <UseCaseForm
                 id={configs.formComponentId}
@@ -94,7 +92,7 @@ const Upload = () => {
             </Form>
           </>
         ) : (
-          ''
+          ""
         )}
       </View>
       <View gridArea="footer" width="100%" height={"size-1000"}>
@@ -104,7 +102,7 @@ const Upload = () => {
           executeOnPress={() => {
             setisExecuted(false);
             dispatch(setIsDisabled(false));
-            console.log(isExecuted);
+            // console.log(isExecuted);
             handleAPIRequest();
           }}
         />

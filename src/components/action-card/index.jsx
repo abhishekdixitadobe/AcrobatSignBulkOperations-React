@@ -51,6 +51,7 @@ const ActionCard = ({
           <Flex marginStart="size-200">
             <Button
               UNSAFE_style={{ whiteSpace: "nowrap" }}
+              UNSAFE_className="cursorPointer"
               variant="accent"
               style="fill"
               onPress={handleNavigation}
