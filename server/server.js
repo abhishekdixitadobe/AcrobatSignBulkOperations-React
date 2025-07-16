@@ -881,17 +881,18 @@ app.post('/api/libraryDocuments', async (req, res) => {
 app.post('/api/widgets', async (req, res) => {
   
   try {
+    await checkSession(req, res);
+
     let allResults = []; // Array to store all results
     let startIndex = '';  // Start index for pagination
     let hasNext = true;   // Flag to control the loop
     
+    const { startDate, endDate, email } = req.body;
     const apiClient = createApiClient(req);
+
     // Base endpoint
     const baseWidgetsURL = new URL('widgets?showHiddenWidgets=true', ADOBE_SIGN_BASE_URL);
-    const baseLibraryDocumentsURL = new URL(
-      'libraryDocuments?showHiddenWidgets=true',
-      ADOBE_SIGN_BASE_URL
-    );
+    const baseLibraryDocumentsURL = new URL('libraryDocuments?showHiddenWidgets=true', ADOBE_SIGN_BASE_URL);
     while (hasNext) {
       const endpointURL = startIndex
       ? new URL(baseLibraryDocumentsURL)
@@ -902,40 +903,43 @@ app.post('/api/widgets', async (req, res) => {
       }
       console.log("endpointURL.hostname-----",endpointURL.hostname);
       console.log("domainsList.hostname-----",domainsList);
-      if (schemesList.includes(endpointURL.protocol) && domainsList.includes(endpointURL.hostname)) {
-            const response = await apiClient.get(
-              endpointURL,
-              {
-                headers: {
-                  'Authorization': req.headers['authorization'],  
-                  'Content-Type': 'application/json',
-                },
-              }
-            );
-          
-            console.log("response.data-------------", response.data);
-            allResults = allResults.concat(response.data.userWidgetList); 
 
-            // Check for next index
-            const nextIndex = response.data.page.nextCursor;
-            console.log("response.data.page------",response.data.page);
-            console.log("nextIndex------",nextIndex);
-            hasNext = (nextIndex !== undefined); 
-
-            if (hasNext) {
-              startIndex = nextIndex; // Update startIndex for the next iteration
-            }
-          } else {
-            console.error('Invalid URL detected:', endpointURL.toString());
-            return res.status(400).json({ error: 'Invalid URL' });
+      try {
+        const response = await apiClient.get(endpointURL, {
+          headers: {
+            'Authorization': req.headers['authorization'],  
+            'x-api-user': `email:${email}`,
+            'Content-Type': 'application/json',
           }
-    } 
-    // Return all collected results
+        });
+          
+        console.log("response.data-------------", response.data);
+        allResults = allResults.concat(response.data.userWidgetList); 
+        
+        // Check for next index
+        const nextIndex = response.data.page.nextCursor;
+        hasNext = !!nextIndex;
+        startIndex = nextIndex || '';
+
+      } catch (error) {
+        if (error.response?.status === 401) {
+          console.error("Token expired and could not be refreshed.");
+          break; // Exit pagination loop
+        }
+        throw error; // Let outer catch handle other errors
+      }
+    }
+
+    const userId = req.session.userId;
+    const userEmail = req.session.userEmail;
+    logger.info('User Activity', { userId, email: userEmail, action: 'Widgets Fetch' });
+    logger.info('User Activity', { totalResults: allResults.length, userWidgetList: allResults, action: 'Widgets Fetch' });
+
     res.json({ totalResults: allResults.length, userWidgetList: allResults });
     
   } catch (error) {
-    console.error('Token exchange failed', error);
-    res.status(500).json({ error: 'Token exchange failed' });
+    console.error('Error fetching widgets:', error.message);
+    res.status(error.response?.status || 500).json({ error: error.message });
   }
 });
 
