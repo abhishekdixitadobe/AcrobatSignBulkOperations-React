@@ -10,7 +10,6 @@ import { setDownloadURLs, resetURLs } from "../../redux/downloadURLs";
 
 const Upload = () => {
   const location = useLocation();
-  // console.log(location.state);
   const configs = location.state.configs;
   const heading = location.state.heading;
   const [formData, setFormData] = useState({});
@@ -102,7 +101,6 @@ const Upload = () => {
           executeOnPress={() => {
             setisExecuted(false);
             dispatch(setIsDisabled(false));
-            // console.log(isExecuted);
             handleAPIRequest();
           }}
         />
