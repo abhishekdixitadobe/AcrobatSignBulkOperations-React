@@ -825,45 +825,56 @@ app.post('/api/search', async (req, res) => {
 });
 
 app.post('/api/libraryDocuments', async (req, res) => {
+  console.log('Inside /api/libraryDocuments');
+
   try {
-    let allResults = []; // Array to store all results
-    let startIndex = ''; // Start index for pagination
-    let hasNext = true;  // Flag to control the loop
     await checkSession(req, res);
+
+    let allResults = [];
+    let startIndex = '';
+    let hasNext = true;
+    const { startDate, endDate, email } = req.body;
     const apiClient = createApiClient(req);
+
     while (hasNext) {
-      let libraryDocumentsEndpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments?showHiddenLibraryDocuments=true&includeSharees=true`;
-      if (startIndex !== '') {
-        libraryDocumentsEndpoint += `&cursor=${startIndex}`;
-      }
-      console.log("libraryDocumentsEndpoint----", libraryDocumentsEndpoint);
+      const libraryDocumentsEndpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments?showHiddenLibraryDocuments=true&includeSharees=true${startIndex ? `&cursor=${startIndex}` : ''}`;
+      console.log("libraryDocumentsEndpoint:", libraryDocumentsEndpoint);
 
-      const response = await apiClient.get(libraryDocumentsEndpoint, {
-        headers: {
-          'Content-Type': 'application/json', 
-          'Authorization': `Bearer ${req.session.tokens.accessToken}`
-        },
-      });
+      try {
+        const response = await apiClient.get(libraryDocumentsEndpoint, {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-user': `email:${email}`,
+            'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          },
+        });
 
-      console.log("response.data-------------", response.data);
-      allResults = allResults.concat(response.data.libraryDocumentList);
+        const documentList = response.data.libraryDocumentList || [];
+        allResults = allResults.concat(documentList);
 
-      // Check for next index
-      const nextIndex = response.data.page.nextCursor;
-      console.log("response.data.page------", response.data.page);
-      console.log("nextIndex------", nextIndex);
-      hasNext = (nextIndex !== undefined);
+        const nextIndex = response.data.page?.nextCursor;
+        hasNext = !!nextIndex;
+        startIndex = nextIndex || '';
 
-      if (hasNext) {
-        startIndex = nextIndex; // Update startIndex for the next iteration
+      } catch (error) {
+        if (error.response?.status === 401) {
+          console.error("Token expired and could not be refreshed.");
+          break; // Exit pagination loop
+        }
+        throw error; // Let outer catch handle other errors
       }
     }
 
-    // Return all collected results
+    const userId = req.session.userId;
+    const userEmail = req.session.userEmail;
+    logger.info('User Activity', { userId, email: userEmail, action: 'Library Documents Fetch' });
+    logger.info('User Activity', { totalResults: allResults.length, libraryDocuments: allResults, action: 'Library Documents Fetch' });
+
     res.json({ totalResults: allResults.length, libraryDocuments: allResults });
+
   } catch (error) {
     console.error('Error fetching library documents:', error.message);
-    res.status(error.response?.status || 500).json({ error: 'Failed to fetch library documents' });
+    res.status(error.response?.status || 500).json({ error: error.message });
   }
 });
 
