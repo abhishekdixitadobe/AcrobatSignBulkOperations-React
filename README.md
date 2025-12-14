@@ -74,7 +74,7 @@ Please go to the browser and run the application with the URL: https://localhost
   </li>
   </ul>
   
-**Important:** Please ensure that the date range is within a six-month duration, as the Adobe Sign API does not support queries beyond this range. 
+**Important:** <span style="color:red"><strong>Please ensure that the date range is within a six-month duration, as the Adobe Sign API does not support queries beyond this range. </strong></span>
 
 #### 3. Download library templates form fields:
   <ul>
