@@ -65,6 +65,7 @@ Please go to the browser and run the application with the URL: https://localhost
   <ul>
   <li>
     Date Range Filtering: Fetch agreements based on specific date ranges, allowing for targeted retrieval of desired records.
+	### - Please ensure that the date range is within a six-month duration, as the Adobe Sign API does not support queries beyond this range.
   </li>
   <li>
     Agreement Status Filtering: Filter agreements based on their status, enabling quick access to agreements in specific states (e.g., completed, pending).
