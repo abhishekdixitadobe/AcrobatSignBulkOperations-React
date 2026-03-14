@@ -5,9 +5,9 @@ import {
   Row,
   Cell,
   Button,
-  Column,
-  Flex,
-} from "@adobe/react-spectrum";
+  Column
+} from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import React, { useEffect, useState } from "react";
 import Papa from "papaparse";
 
@@ -18,7 +18,11 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
     const parseAllCSVs = async () => {
       let parsedData = await Promise.all(filledSrc.map(parseCSV));
       parsedData = parsedData.flat();
-      parsedData = parsedData.length > 0 ? parsedData.filter((el) => el[Object.keys(parsedData[0])]) : parsedData;
+
+      parsedData = parsedData.filter(row =>
+        Object.values(row).some(value => value !== "" && value != null)
+      );
+
       setCsvData(parsedData);
     };
 
@@ -33,9 +37,8 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
       return new Promise((resolve) => {
         Papa.parse(file, {
           header: true,
-          complete: (results) => {
-            resolve(results.data);
-          },
+          skipEmptyLines: true,
+          complete: (results) => resolve(results.data),
         });
       });
     } catch (error) {
@@ -47,22 +50,38 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
   const columns = csvData.length > 0 ? Object.keys(csvData[0]) : [];
 
   return (
-    <Flex height="100%" direction="column">
-      {Array.isArray(csvData) && csvData.length > 0 ? (
-        <TableView aria-label="File Display" width="100%" height="size-2400">
+    <div
+      className={style({
+        display: "flex",
+        height: "full",
+        flexDirection: "column"
+      })}
+    >
+      {csvData.length > 0 ? (
+        <TableView
+          aria-label="File Display"
+          styles={style({ width: "full", height: 192 })}
+        >
           <TableHeader>
-            {columns.map((column) => (
-              <Column key={column} align="start" allowsResizing>
+            {columns.map((column, index) => (
+              <Column
+                key={column}
+                id={column}
+                allowsResizing
+                align="start"
+                isRowHeader={index === 0}
+              >
                 {column.charAt(0).toUpperCase() + column.slice(1)}
               </Column>
             ))}
           </TableHeader>
+
           <TableBody>
-            {csvData.map((data, rowIndex) => (
-              <Row key={rowIndex}>
+            {csvData.map((row, rowIndex) => (
+              <Row key={rowIndex} id={rowIndex}>
                 {columns.map((column) => (
                   <Cell key={`${rowIndex}-${column}`}>
-                    {data[column] || "N/A"}
+                    {row[column] || "N/A"}
                   </Cell>
                 ))}
               </Row>
@@ -72,18 +91,24 @@ const CSVDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
       ) : (
         <p>No data to display</p>
       )}
-      <Flex justifyContent="center" marginTop="size-100" width="100%">
+
+      <div
+        className={style({
+          display: "flex",
+          justifyContent: "center",
+          marginTop: 8,
+          width: "full"
+        })}
+      >
         <Button
           variant="negative"
-          onPress={() => {
-            handleRemoveIndividualClick(0);
-          }}
-          UNSAFE_className={"cursorPointer"}
+          onPress={() => handleRemoveIndividualClick(0)}
+          styles={style({ cursor: "pointer" })}
         >
           Remove
         </Button>
-      </Flex>
-    </Flex>
+      </div>
+    </div>
   );
 };
 

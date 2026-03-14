@@ -15,7 +15,7 @@
  * from Adobe.
  **************************************************************************/
 
-import React from "react";
+
 import { Route, Routes } from "react-router-dom";
 import Landing from "./views/landing";
 import Upload from "./views/upload";

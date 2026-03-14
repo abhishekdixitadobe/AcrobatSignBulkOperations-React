@@ -16,7 +16,7 @@
 **************************************************************************/
 
 import React, { useState } from 'react';
-import { Flex, View} from '@adobe/react-spectrum';
+import { style } from "@react-spectrum/s2/style";
 import PropertyRail from './prop-rail';
 import { useLocation } from 'react-router-dom';
 import JobConfig from './job-config';
@@ -80,29 +80,49 @@ const SetupView = () => {
     } 
 
     return (
-        <Flex direction={'row'} gap={50} height={'100%'} width={'100%'}>
-                {jobStatus === 'ready'  &&
-                    <JobConfig onImageDrop={onImageDrop}/>
-                }
-                {jobStatus === 'running' &&
-                    <Flex direction={'column'} width={'100%'} height={'100%'} alignItems={'center'}>
-                        <Flex direction={'row'} width={'100%'} alignItems={'center'}>
-                            
-                        </Flex>
-                    </Flex>
-                }
-                {jobStatus === 'preview' &&
-                    <PreviewResults images={previewImages} onContinue={renderFinal}/>
-                }
-                {jobStatus === 'final' &&
-                     <ImageResults images={finalOutput}/>
-                }
-                
-            
-            <View height={'100%'}>
-                <PropertyRail context={location.state} width={'size-6000'} onExecute={runWorkflow} />
-            </View>
-        </Flex>
+        <div
+            className={style({
+                display: "flex",
+                flexDirection: "row",
+                gap: "[50px]",
+                height: "full",
+                width: "full"
+            })}>
+            {jobStatus === 'ready'  &&
+                <JobConfig onImageDrop={onImageDrop}/>
+            }
+            {jobStatus === 'running' &&
+                <div
+                    className={style({
+                        display: "flex",
+                        flexDirection: "column",
+                        width: "full",
+                        height: "full",
+                        alignItems: "center"
+                    })}>
+                    <div
+                        className={style({
+                            display: "flex",
+                            flexDirection: "row",
+                            width: "full",
+                            alignItems: "center"
+                        })}>
+                        
+                    </div>
+                </div>
+            }
+            {jobStatus === 'preview' &&
+                <PreviewResults images={previewImages} onContinue={renderFinal}/>
+            }
+            {jobStatus === 'final' &&
+                 <ImageResults images={finalOutput}/>
+            }
+            <div className={style({
+                height: "full"
+            })}>
+                <PropertyRail context={location.state} width={'480'} onExecute={runWorkflow} />
+            </div>
+        </div>
     );
 }
 

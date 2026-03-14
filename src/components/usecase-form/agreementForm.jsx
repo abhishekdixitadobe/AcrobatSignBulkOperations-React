@@ -1,6 +1,16 @@
+import {
+  ComboBoxItem,
+  DatePicker,
+  TextField,
+  ComboBox,
+  Checkbox,
+  Disclosure,
+  DisclosureTitle,
+  DisclosurePanel,
+  ToastQueue,
+} from "@react-spectrum/s2";
 import React, { useEffect, useState } from "react";
-import { Flex, DatePicker, TextField, Item, ComboBox, Checkbox } from "@adobe/react-spectrum";
-import { Accordion, Disclosure, DisclosureTitle, DisclosurePanel } from "@react-spectrum/accordion";
+import { Accordion } from "@react-spectrum/s2";
 import { today, getLocalTimeZone } from "@internationalized/date";
 import AgreementAction from "../../components/agreement-action";
 import { useDispatch, useSelector } from "react-redux";
@@ -8,7 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { setAgreements } from "../../redux/agreementsSlice";
 import { readCSV } from "../../utils/csvHelper";
 import DragAndDrop from "../drag-and-drop";
-import { ToastQueue } from "@react-spectrum/toast";
+import { style } from "@react-spectrum/s2/style";
 
 const AgreementForm = ({ onChange, setUploadFiles }) => {
   const [startDate, setStartDate] = useState(today(getLocalTimeZone()));
@@ -240,7 +250,12 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
       <Disclosure id="userAgreementLookup">
         <DisclosureTitle>User Agreement Lookup</DisclosureTitle>
         <DisclosurePanel>
-          <Flex gap="size-200" wrap>
+          <div
+            className={style({
+              display: "flex",
+              gap: 16,
+              flexWrap: "wrap"
+            })}>
             <DatePicker
               label="Start Date"
               isRequired
@@ -269,14 +284,14 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
             />
             <ComboBox label="Select Statuses" onSelectionChange={() => {}}>
               {agreementStatusOptions.map((option) => (
-                <Item key={option.id} textValue={option.name}>
+                <ComboBoxItem id={option.id} textValue={option.name} key={option.id}>
                   <Checkbox
                     isSelected={selectedStatuses.has(option.id)}
                     onChange={() => toggleStatus(option.id)}
                   >
                     {option.name}
                   </Checkbox>
-                </Item>
+                </ComboBoxItem>
               ))}
             </ComboBox>
             <AgreementAction
@@ -291,14 +306,24 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
               buttonText={"Get Agreements"}
               isDisabled={!email || isLoading}
             />
-          </Flex>
+          </div>
         </DisclosurePanel>
       </Disclosure>
       <Disclosure id="bulkUserAgreements">
         <DisclosureTitle>Bulk User Agreements</DisclosureTitle>
         <DisclosurePanel>
-          <Flex direction="column" gap="size-200">
-            <Flex direction="row" gap="size-200">
+          <div
+            className={style({
+              display: "flex",
+              flexDirection: "column",
+              gap: 16
+            })}>
+            <div
+              className={style({
+                display: "flex",
+                flexDirection: "row",
+                gap: 16
+              })}>
               <DatePicker
                 label="Start Date"
                 isRequired
@@ -318,17 +343,17 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
               />
               <ComboBox label="Select Statuses" onSelectionChange={() => {}}>
                 {agreementStatusOptions.map((option) => (
-                  <Item key={option.id} textValue={option.name}>
+                  <ComboBoxItem id={option.id} textValue={option.name} key={option.id}>
                     <Checkbox
                       isSelected={selectedStatuses.has(option.id)}
                       onChange={() => toggleStatus(option.id)}
                     >
                       {option.name}
                     </Checkbox>
-                  </Item>
+                  </ComboBoxItem>
                 ))}
               </ComboBox>
-            </Flex>
+            </div>
 
             <DragAndDrop
               heading="Upload active users list"
@@ -352,34 +377,9 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
               isDisabled={!isButtonEnabled}
               heading="Agreements"
             />
-          </Flex>
+          </div>
         </DisclosurePanel>
       </Disclosure>
-      {/*
-        <Disclosure id="agreementIdSearch">
-          <DisclosureHeader>Agreement ID Search</DisclosureHeader>
-            <DisclosurePanel>
-                <Flex direction="column" gap="size-200">
-                <DragAndDrop
-                    heading="Upload agreement Ids list"
-                    description="Or, select single CSV file from your computer"
-                    acceptedFileTypes={["text/csv"]}
-                    onImageDrop={(files) => {
-                      setSelectedFiles((prevFiles) => [...prevFiles, ...files]);
-                    }}
-                    setUploadFiles={setUploadFiles}
-                  />
-                  <AgreementAction
-                    params={{ startDate, endDate, email }}
-                    onAction={handleApiCall}
-                    buttonText="Get Agreements"
-                    isDisabled={!email}
-                    heading="Agreements"
-                  />
-                </Flex>
-            </DisclosurePanel>
-        </Disclosure> 
-      */}
     </Accordion>
   );
 };

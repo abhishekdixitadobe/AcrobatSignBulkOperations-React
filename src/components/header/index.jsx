@@ -16,16 +16,10 @@
  **************************************************************************/
 
 import React, { useEffect, useState } from "react";
-import {
-  Flex,
-  View,
-  Link,
-  Image,
-  Heading,
-  Button,
-} from "@adobe/react-spectrum";
+import { Link, Image, Heading, Button } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import AppLogo from "./appLogo.jpg";
-import ChevronLeft from "@spectrum-icons/workflow/ChevronLeft";
+import ChevronLeft from "@react-spectrum/s2/icons/ChevronLeft";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutSuccess } from "../../services/authService";
@@ -58,53 +52,96 @@ const Header = () => {
   };
 
   return (
-    <View backgroundColor={"gray-50"} height="100%">
-      <Flex direction="row" height="100%" gap="size-100" alignItems={"center"} justifyContent="space-between">
-        <View paddingStart={"size-300"}>
-          <Flex direction="row" alignItems="center" gap="size-100">
-            <Link isQuiet>
-              <a href="/">
-                <Image
-                  src={AppLogo}
-                  height={"size-400"}
-                  alt={"DragonFly-Logo"}
-                />
-              </a>
+    <div
+      className={style({
+        backgroundColor: "gray-25",
+        height: "full"
+      })}>
+      <div
+        className={style({
+          display: "flex",
+          flexDirection: "row",
+          height: "full",
+          gap: 8,
+          alignItems: "center",
+          justifyContent: "space-between"
+        })}>
+        <div className={style({
+          paddingStart: 24
+        })}>
+          <div
+            className={style({
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 8
+            })}>
+            <Link isQuiet href="/">
+              <Image
+                src={AppLogo}
+                alt={"DragonFly-Logo"}
+                styles={style({
+                  height: 32
+                })}
+              />
             </Link>
             {!isLandingPage ? (
-              <Flex direction="row">
+              <div className={style({
+                display: "flex",
+                flexDirection: "row"
+              })}>
                 <Heading level={3}>{"Bulk Operations Tool"}</Heading>
-              </Flex>
+              </div>
             ) : (
-              <Flex direction="row" alignItems="center">
+              <div
+                className={style({
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center"
+                })}>
                 <Button
                   onPress={handleBackClick}
                   aria-label={"Head Back Button"}
-                  UNSAFE_style={{ border: "none" }}
-                  UNSAFE_className="cursorPointer"
+                  styles={style({
+                    cursor: "pointer"
+                  })}
+                  fillStyle={{
+                    border: "none"
+                  }}
                 >
                   <ChevronLeft size="M" />
                 </Button>
                 <Heading level={3}>{"Back"}</Heading>
-              </Flex>
+              </div>
             )}
-          </Flex>
-        </View>
+          </div>
+        </div>
         {/* Right section with Welcome message and Sign out */}
-        <View paddingEnd={"size-300"}>
-          <Flex direction="row" alignItems="center" gap="size-200">
+        <div className={style({
+          paddingEnd: 24
+        })}>
+          <div
+            className={style({
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: 16
+            })}>
             {isAuthenticated && (
               <>
                 <Heading level={4}>Welcome, {user.firstName}</Heading>{" "}{/* Display username */}
-                <Button onPress={handleLogout} variant="primary" UNSAFE_className="cursorPointer">
+                <Button onPress={handleLogout} variant="primary"
+                  styles={style({
+                    cursor: "pointer"
+                  })}>
                   Sign Out
                 </Button>
               </>
             )}
-          </Flex>
-        </View>
-      </Flex>
-    </View>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

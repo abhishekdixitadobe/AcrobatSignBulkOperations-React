@@ -16,11 +16,19 @@
 **************************************************************************/
 
 import React from 'react';
-import {Flex, View, Image} from '@adobe/react-spectrum';
+import { Image } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 
 const ImageResults = ({images}) => {
     return (
-        <Flex direction={'row'} gap={40} wrap width={'100%'}>
+        <div
+            className={style({
+                display: "flex",
+                flexDirection: "row",
+                gap: 40,
+                flexWrap: "wrap",
+                width: "full"
+            })}>
             {images.map(entry => {
                let url = '';
                if(entry.image) {
@@ -30,13 +38,17 @@ const ImageResults = ({images}) => {
                 url = entry
                }
                return (
-                <View height={'size-4600'} width={'size-4600'}>
-                    <Image src={url}/>
-                </View>
-               )
+                   <div
+                       className={style({
+                           height: 368,
+                           width: 368
+                       })}>
+                       <Image src={url}/>
+                   </div>
+               );
                
             })}
-        </Flex>
-    )
+        </div>
+    );
 }
 export default ImageResults;

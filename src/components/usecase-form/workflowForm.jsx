@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from "react";
+
 import {
-    Flex, DatePicker, ComboBox, DropZone,
-    IllustratedMessage, Heading, Content, FileTrigger, Button, Item
-} from "@adobe/react-spectrum";
-import Upload from '@spectrum-icons/illustrations/Upload';
+    DatePicker,
+    ComboBox,
+    DropZone,
+    IllustratedMessage,
+    Heading,
+    Content,
+    FileTrigger,
+    Button,
+} from "@react-spectrum/s2";
+
+import { style } from "@react-spectrum/s2/style";
+
 import AgreementAction from "../../components/agreement-action";
 import { parseDate } from "@internationalized/date";
 import { useDispatch, useSelector } from "react-redux";
@@ -115,8 +124,18 @@ const WorkflowForm = ({onChange, setUploadFiles}) => {
     const isButtonEnabled = email && selectedFiles.length > 0;
     return (
         <>
-            <Flex direction="column" gap="size-100">
-                <Flex direction="row" gap="size-100">
+            <div
+                className={style({
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 8
+                })}>
+                <div
+                    className={style({
+                        display: "flex",
+                        flexDirection: "row",
+                        gap: 8
+                    })}>
                     <DatePicker label="Start Date" value={startDate} onChange={setStartDate} />
                     <DatePicker label="End Date" value={endDate} onChange={setEndDate} />
                     <AgreementAction
@@ -126,7 +145,7 @@ const WorkflowForm = ({onChange, setUploadFiles}) => {
                         isDisabled={!isButtonEnabled}
                         heading="Agreements"
                     />
-                </Flex>
+                </div>
                 <DragAndDrop
                   heading="Upload agreement Ids list"
                   description="Or, select single CSV file from your computer"
@@ -136,7 +155,7 @@ const WorkflowForm = ({onChange, setUploadFiles}) => {
                   }}
                   setUploadFiles={setUploadFiles}
                 />
-            </Flex>
+            </div>
         </>
     );
 };

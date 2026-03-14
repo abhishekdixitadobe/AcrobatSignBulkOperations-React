@@ -15,8 +15,9 @@
  * from Adobe.
  **************************************************************************/
 
-import React from "react";
-import { Flex, Text } from "@adobe/react-spectrum";
+
+import { Text } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import background from "./PD-DSBanner.png";
 
 const Hero = () => {
@@ -35,24 +36,28 @@ const Hero = () => {
         justifyContent: "center",
       }}
     >
-      <Flex
-        direction={"column"}
-        alignItems={"center"}
-        justifyContent={"center"}
-      >
+      <div
+        className={style({
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center"
+        })}>
         <Text
-          UNSAFE_style={{
+          style={{
             fontSize: "40px",
-            color: "var(--spectrum-global-color-gray-100)",
+            color: "var(--spectrum-global-color-gray-100)"
           }}
         >
           Bulk Operations Tool
         </Text>
-        <Text UNSAFE_style={{ color: "var(--spectrum-global-color-gray-100)" }}>
+        <Text style={{
+          color: "var(--spectrum-global-color-gray-100)"
+        }}>
         One Stop Solution for actions in bulk.
         </Text>
         
-      </Flex>
+      </div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
-import { Form, Grid, Heading, Text, View } from "@adobe/react-spectrum";
+import { Form, Heading, Text } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
@@ -70,14 +71,21 @@ const Upload = () => {
   };
 
   return (
-    <Grid
-      areas={["content", "footer"]}
-      height="100%"
-      width="100%"
-      columns={["1fr"]}
-      rows={["1fr", "auto"]}
-    >
-      <View gridArea="content" width="75%" marginX="auto">
+    <div
+      className={style({
+        display: "grid",
+        gridTemplateAreas: ["content", "footer"],
+        height: "full",
+        width: "full",
+        gridTemplateColumns: ["1fr"],
+        gridTemplateRows: ["1fr", "auto"]
+      })}>
+      <div
+        className={style({
+          gridArea: "content",
+          width: "[75%]",
+          marginX: "[auto]"
+        })}>
         {!isExecuted ? (
           <>
             <Heading level={1}>{heading}</Heading>
@@ -93,8 +101,13 @@ const Upload = () => {
         ) : (
           ""
         )}
-      </View>
-      <View gridArea="footer" width="100%" height={"size-1000"}>
+      </div>
+      <div
+        className={style({
+          gridArea: "footer",
+          width: "full",
+          height: 80
+        })}>
         <Footer
           disableBack={isExecuted}
           disableExecute={isExecuted}
@@ -104,8 +117,8 @@ const Upload = () => {
             handleAPIRequest();
           }}
         />
-      </View>
-    </Grid>
+      </div>
+    </div>
   );
 };
 

@@ -1,6 +1,6 @@
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { ToastQueue } from "@react-spectrum/toast";
+import { ToastQueue } from "@react-spectrum/s2";
 
 /**
  * Generic API call method

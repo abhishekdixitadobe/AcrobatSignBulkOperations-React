@@ -1,5 +1,6 @@
-import { Button, Text } from "@adobe/react-spectrum";
-import React from "react";
+import { Button, Text } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
+
 
 const AgreementAction = ({ params, onAction, buttonText = "Submit", isDisabled, configs = {}, heading }) => {
   const handleButtonClick = () => {
@@ -9,18 +10,21 @@ const AgreementAction = ({ params, onAction, buttonText = "Submit", isDisabled, 
   };
 
   return (
-        <Button
-          UNSAFE_style={{ whiteSpace: "nowrap" }}
-          UNSAFE_className="cursorPointer"
-          variant="accent"
-          style="fill"
-          onPress={handleButtonClick}
-          isDisabled={isDisabled}
-          alignSelf="end"
-          marginTop="15px"
-        >
-          <Text>{buttonText}</Text>
-        </Button>
+    <Button
+      variant="accent"
+      fillStyle="fill"
+      onPress={handleButtonClick}
+      isDisabled={isDisabled}
+      styles={style({
+        alignSelf: "end",
+        marginTop: "[15px]",
+        cursor: "pointer"
+      })}
+      style={{
+        whiteSpace: "nowrap"
+      }}>
+      <Text>{buttonText}</Text>
+    </Button>
   );
 };
 

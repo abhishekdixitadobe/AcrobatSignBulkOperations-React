@@ -1,6 +1,19 @@
 import React, { useState, useRef } from "react";
-import { Flex, DatePicker, TextField, Button, Item, ComboBox, DropZone, IllustratedMessage, Heading, Content, FileTrigger, ToastQueue } from "@adobe/react-spectrum";
-import Upload from "@spectrum-icons/illustrations/Upload";
+
+import {
+  DatePicker,
+  TextField,
+  Button,
+  ComboBox,
+  DropZone,
+  IllustratedMessage,
+  Heading,
+  Content,
+  FileTrigger,
+  ToastQueue,
+} from "@react-spectrum/s2";
+
+import { style } from "@react-spectrum/s2/style";
 import AgreementAction from "../../components/agreement-action";
 import { today, getLocalTimeZone } from "@internationalized/date";
 import { useSelector, useDispatch } from "react-redux";
@@ -104,7 +117,12 @@ const TemplateForm = ({ onChange, setUploadFiles }) => {
 
   return (
     <>
-      <Flex direction="column" gap="size-200">
+      <div
+        className={style({
+          display: "flex",
+          flexDirection: "column",
+          gap: 16
+        })}>
         <DragAndDrop
           heading="Upload active users list"
           description="Or, select single CSV file from your computer"
@@ -121,7 +139,7 @@ const TemplateForm = ({ onChange, setUploadFiles }) => {
           isDisabled={!isButtonEnabled}
           heading="Templates"
         />
-      </Flex>
+      </div>
     </>
   );
 };

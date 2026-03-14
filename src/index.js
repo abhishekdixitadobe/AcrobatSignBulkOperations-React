@@ -15,8 +15,9 @@
  * from Adobe.
  **************************************************************************/
 
-import { defaultTheme, Grid, Provider, View } from "@adobe/react-spectrum";
-import { ToastContainer } from "@react-spectrum/toast";
+import { defaultTheme, Provider } from "@react-spectrum/s2";
+import { ToastContainer } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider as ReduxProvider } from "react-redux";
@@ -37,27 +38,31 @@ const App = () => {
       <BrowserRouter>
         <div className="applicationContentWrapper">
           <ToastContainer placement="top" />
-          <Grid
-            areas={["header header", "content content"]}
-            columns={["1fr"]}
-            rows={["size-800", "auto"]}
-            height="100%"
-          >
-            <View
-              gridArea="header"
+          <div
+            className={style({
+              display: "grid",
+              gridTemplateAreas: ["header header", "content content"],
+              gridTemplateColumns: ["1fr"],
+              gridTemplateRows: [64, "auto"],
+              height: "full"
+            })}>
+            <div
               borderBottomColor="gray-300"
-              borderBottomWidth="thin"
-            >
+              className={style({
+                gridArea: "header",
+                borderBottomWidth: 1
+              })}>
               <Header />
-            </View>
-            <View
-              gridArea="content"
+            </div>
+            <div
               min-height="100%"
-              backgroundColor="gray-100"
-            >
+              className={style({
+                gridArea: "content",
+                backgroundColor: "gray-75"
+              })}>
               <AppRouter />
-            </View>
-          </Grid>
+            </div>
+          </div>
         </div>
       </BrowserRouter>
     </Provider>

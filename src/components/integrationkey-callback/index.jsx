@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { login } from '../../redux/authReducer'; 
-import { ToastQueue } from '@react-spectrum/toast';
+import { ToastQueue } from "@react-spectrum/s2";
 
 const IntegrationKeyCallback = () => {
   const navigate = useNavigate();

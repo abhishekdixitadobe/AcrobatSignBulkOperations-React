@@ -1,4 +1,5 @@
-import { Button, ButtonGroup, Flex, View } from "@adobe/react-spectrum";
+import { Button, ButtonGroup } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -37,13 +38,37 @@ const Footer = (props) => {
   };
 
   return (
-    <View backgroundColor={"gray-50"} height="100%">
-      <Flex direction="row" height="100%" gap="size-100" alignItems={"center"}>
-        <View paddingX={"size-800"} width="100%">
-          <Flex justifyContent="space-between">
-            <Flex justifyContent="end">
+    <div
+      className={style({
+        backgroundColor: "gray-25",
+        height: "full"
+      })}>
+      <div
+        className={style({
+          display: "flex",
+          flexDirection: "row",
+          height: "full",
+          gap: 8,
+          alignItems: "center"
+        })}>
+        <div
+          className={style({
+            paddingX: 64,
+            width: "full"
+          })}>
+          <div className={style({
+            display: "flex",
+            justifyContent: "space-between"
+          })}>
+            <div className={style({
+              display: "flex",
+              justifyContent: "end"
+            })}>
               <ButtonGroup>
                 <Button
+                  styles={style({
+                    cursor: "pointer"
+                  })}
                   UNSAFE_className="cursorPointer"
                   variant="secondary"
                   onPress={() => window.history.back()}
@@ -54,8 +79,10 @@ const Footer = (props) => {
 
                 {showDownload && (
                   <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
+                    styles={style({
+                      cursor: "pointer"
+                    })}
+                    variant="accent"
                     isPending={isLoading.download}
                     onPress={() => handleAsyncAction(downloadOnPress, "download")}
                   >
@@ -65,8 +92,10 @@ const Footer = (props) => {
 
                 {showDownloadList && (
                   <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
+                    styles={style({
+                      cursor: "pointer"
+                    })}
+                    variant="accent"
                     isPending={isLoading.downloadList}
                     onPress={() =>
                       handleAsyncAction(downloadList, "downloadList")
@@ -78,8 +107,10 @@ const Footer = (props) => {
 
                 {showGetAgreements && (
                   <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
+                    styles={style({
+                      cursor: "pointer"
+                    })}
+                    variant="accent"
                     onPress={agreementList}
                   >
                     Get Agreements
@@ -88,8 +119,10 @@ const Footer = (props) => {
 
                 {showDownloadFormField && (
                   <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
+                    styles={style({
+                      cursor: "pointer"
+                    })}
+                    variant="accent"
                     isPending={isLoading.downloadFormField}
                     onPress={() =>
                       handleAsyncAction(downloadFormField, "downloadFormField")
@@ -101,8 +134,10 @@ const Footer = (props) => {
 
                 {showAuditReport && (
                   <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
+                    styles={style({
+                      cursor: "pointer"
+                    })}
+                    variant="accent"
                     isPending={isLoading.auditReport}
                     onPress={() =>
                       handleAsyncAction(downloadAuditReport, "auditReport")
@@ -114,8 +149,10 @@ const Footer = (props) => {
 
                 {showDelete && (
                   <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
+                    styles={style({
+                      cursor: "pointer"
+                    })}
+                    variant="accent"
                     isPending={isLoading.delete}
                     onPress={() => handleAsyncAction(deleteOnPress, "delete")}
                   >
@@ -123,11 +160,11 @@ const Footer = (props) => {
                   </Button>
                 )}
               </ButtonGroup>
-            </Flex>
-          </Flex>
-        </View>
-      </Flex>
-    </View>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

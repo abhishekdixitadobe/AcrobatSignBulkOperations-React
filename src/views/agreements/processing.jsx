@@ -15,7 +15,9 @@
  * from Adobe.
 **************************************************************************/
 
-import { Flex, Heading, Text , ProgressCircle, Dialog, DialogContainer, Content} from '@adobe/react-spectrum';
+import { Heading, Text, ProgressCircle, Dialog, DialogContainer, Content } from "@react-spectrum/s2";
+
+import { style } from "@react-spectrum/s2/style";
 import React, { useEffect, useState } from 'react';
 import ImageResults from '../../components/image-results';
 import { useSelector } from 'react-redux';
@@ -60,28 +62,49 @@ const ProcessingView = ({onContinue}) => {
         }  
     },[logEntryList, selectedBackground]);
 
-    return(
-        <Flex direction={'column'} width={'100%'} height={'100%'} alignItems={'center'}>
-           <Flex direction={'row'} width={'100%'} alignItems={'center'}>
-           <DialogContainer onDismiss={()=> setIsRunning(false)}>
-                {isRunning && <Dialog size='M'>
-                    <Content>
-                        <Flex direction='column' alignItems='center' height='100%' width='100%' gap='size-100'>
-                            <ProgressCircle size='L' aria-label="Hold on, magic is happening…" isIndeterminate/>
-                            <Text>Hold on, magic is happening…</Text>
-                            <Heading level={1}>{action}</Heading>
-                        </Flex>
-                    </Content>
-                </Dialog>}
-            </DialogContainer>
-            {showPreview ? 
-                <PreviewResults images={previewImages} onContinue={onContinue}/>
-            : null }
-            {showResults.length > 0 ?
-                <ImageResults images={showResults}/>
-            : null}
-           </Flex>
-        </Flex>
+    return (
+        <div
+            className={style({
+                display: "flex",
+                flexDirection: "column",
+                width: "full",
+                height: "full",
+                alignItems: "center"
+            })}>
+            <div
+                className={style({
+                    display: "flex",
+                    flexDirection: "row",
+                    width: "full",
+                    alignItems: "center"
+                })}>
+            <DialogContainer onDismiss={()=> setIsRunning(false)}>
+                 {isRunning && <Dialog size='M'>
+                     <Content>
+                         <div
+                             className={style({
+                                 display: "flex",
+                                 flexDirection: "column",
+                                 alignItems: "center",
+                                 height: "full",
+                                 width: "full",
+                                 gap: 8
+                             })}>
+                             <ProgressCircle size='L' aria-label="Hold on, magic is happening…" isIndeterminate/>
+                             <Text>Hold on, magic is happening…</Text>
+                             <Heading level={1}>{action}</Heading>
+                         </div>
+                     </Content>
+                 </Dialog>}
+             </DialogContainer>
+             {showPreview ? 
+                 <PreviewResults images={previewImages} onContinue={onContinue}/>
+             : null }
+             {showResults.length > 0 ?
+                 <ImageResults images={showResults}/>
+             : null}
+            </div>
+        </div>
     );
 }
 

@@ -1,10 +1,11 @@
 import React, {useState } from "react";
-import { Provider, defaultTheme, Button, TextField, Form, Heading, View } from '@adobe/react-spectrum';
+import { Provider, defaultTheme } from '@react-spectrum/s2';
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer";
 import AgreementAction from "../../components/agreement-action";
-import { ToastQueue } from "@react-spectrum/toast";
+import { Button, TextField, Form, Heading, ToastQueue } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 
 function Setup() {
 
@@ -52,25 +53,30 @@ function Setup() {
 
   return (
     <Provider theme={defaultTheme}>
-      <View
-        width="size-3600"
-        backgroundColor="gray-100"
-        padding="size-200"
-        margin="auto"
-        height="100vh"
+      <div
         display="flex"
         alignItems="center"
         justifyContent="center"
-      >
-        <Form validationBehavior="native" isRequired necessityIndicator="label">
-          <Heading level={1} UNSAFE_style={{ textAlign: "center" }}>Login</Heading>
+        className={style({
+          width: 288,
+          backgroundColor: "gray-75",
+          padding: 16,
+          margin: "[auto]",
+          height: "[100vh]"
+        })}>
+        <Form isRequired necessityIndicator="label">
+          <Heading level={1} style={{
+            textAlign: "center"
+          }}>Login</Heading>
           <TextField
             label="Email"
             type="email"
             value={email}
             onChange={setEmail}
             isRequired
-            width="100%"
+            styles={style({
+              width: "full"
+            })}
           />
           <TextField
             label="Password"
@@ -78,7 +84,9 @@ function Setup() {
             value={password}
             onChange={setPassword}
             isRequired
-            width="100%"
+            styles={style({
+              width: "full"
+            })}
           />
           <AgreementAction
             params={{ email, password }}
@@ -88,13 +96,18 @@ function Setup() {
             heading="Bulk Operation Tool setup"
           />
         </Form>
-      </View>
-      <View gridArea="footer" width="100%" height={"size-1000"}>
+      </div>
+      <div
+        className={style({
+          gridArea: "footer",
+          width: "full",
+          height: 80
+        })}>
         <Footer
           disableBack={true}
           disableExecute={true}
         />
-      </View>
+      </div>
     </Provider>
   );
 }

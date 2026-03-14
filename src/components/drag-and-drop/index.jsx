@@ -15,23 +15,16 @@
  * from Adobe.
  **************************************************************************/
 
-import {
-  Button,
-  Content,
-  Flex,
-  Heading,
-  IllustratedMessage,
-  Text,
-} from "@adobe/react-spectrum";
-import { DropZone } from "@react-spectrum/dropzone";
-import Upload from "@spectrum-icons/illustrations/Upload";
-import React, { useEffect } from "react";
+import { Button, Content, Heading, IllustratedMessage, Text, DropZone } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
+
+
 import { FileTrigger } from "react-aria-components";
 import FileDisplay from "./FileDisplay";
 import ImageGrid from "./ImageGrid";
 import CSVDisplay from "./CSVDisplay";
 import { useDispatch } from "react-redux";
-import { set } from "lodash";
+import { Upload } from "@react-spectrum/s2/icons/upload";
 
 const DragAndDrop = (props) => {
   const {
@@ -127,12 +120,14 @@ const DragAndDrop = (props) => {
   };
 
   return (
-    <Flex
-      direction={"column"}
-      gap={30}
-      height={"100%"}
-      marginBottom={"size-200"}
-    >
+    <div
+      className={style({
+        display: "flex",
+        flexDirection: "column",
+        gap: "[30px]",
+        height: "full",
+        marginBottom: 16
+      })}>
       <DropZone
         isFilled={!!filledSrc}
         getDropOperation={(types) => {
@@ -146,8 +141,12 @@ const DragAndDrop = (props) => {
           return isAccepted ? "copy" : "cancel";
         }}
         onDrop={(e) => handleObjectDrop(e)}
-        minHeight={"size-2000"}
-        UNSAFE_style={{ padding: "25px" }}
+        styles={style({
+          minHeight: 160
+        })}
+        style={{
+          padding: "25px"
+        }}
       >
         {filledSrc.length > 0 ? (
           isAllAcceptedImage ? (
@@ -184,9 +183,13 @@ const DragAndDrop = (props) => {
             >
               <Button
                 variant="accent"
-                style="fill"
-                UNSAFE_style={{ marginTop: "20px" }}
-                UNSAFE_className={"cursorPointer"}
+                fillStyle="fill"
+                styles={style({
+                  cursor: "pointer"
+                })}
+                style={{
+                  marginTop: "20px"
+                }}
               >
                 Browse files
               </Button>
@@ -194,7 +197,7 @@ const DragAndDrop = (props) => {
           </IllustratedMessage>
         )}
       </DropZone>
-    </Flex>
+    </div>
   );
 };
 

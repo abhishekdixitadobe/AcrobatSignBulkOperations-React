@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Button, Text, View } from "@adobe/react-spectrum";
-import { Card } from "@react-spectrum/card";
-import { Content } from "@react-spectrum/view";
+import { Card } from "@react-spectrum/s2";
+import { Button, Text, Content } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import backgroundImage from "./login-background.png";
 import { useNavigate } from "react-router-dom";
 
@@ -37,47 +37,52 @@ const Login = () => {
         position: "relative",
       }}
     >
-      <View
-        backgroundColor="white"
-        padding="size-400"
-        borderRadius="medium"
+      <div
         boxShadow="0px 4px 16px rgba(0, 0, 0, 0.2)"
-        width="300px"
-        UNSAFE_style={{
-          textAlign: "center",
-          padding: "2rem",
-        }}
-      >
+        className={style({
+          backgroundColor: "white",
+          padding: 32,
+          borderRadius: "lg",
+          width: 300,
+          textAlign: "center"
+        })}
+        style={{
+          padding: "2rem"
+        }}>
         <Card>
           <Content>
             {showOAuthLogin && (
               <Button
-                UNSAFE_style={{
+                styles={style({
+                  cursor: "pointer"
+                })}
+                variant="accent"
+                fillStyle="fill"
+                onPress={handleLogin}
+                style={{
                   width: "100%",
                   marginBottom: "1rem",
                   backgroundColor: "#0070d2",
-                  color: "white",
+                  color: "white"
                 }}
-                UNSAFE_className="cursorPointer"
-                variant="accent"
-                style="fill"
-                onPress={handleLogin}
               >
                 <Text>Login with Adobe Sign</Text>
               </Button>
             )}
             {showIntegrationLogin && (
               <Button
-                UNSAFE_style={{
+                styles={style({
+                  cursor: "pointer"
+                })}
+                variant="accent"
+                fillStyle="fill"
+                onPress={handleIntegrationLogin}
+                style={{
                   width: "100%",
                   marginBottom: "1rem",
                   backgroundColor: "#0070d2",
-                  color: "white",
+                  color: "white"
                 }}
-                UNSAFE_className="cursorPointer"
-                variant="accent"
-                style="fill"
-                onPress={handleIntegrationLogin}
               >
                 <Text>Login with Integration key</Text>
               </Button>
@@ -99,7 +104,7 @@ const Login = () => {
                         </Button> */}
           </Content>
         </Card>
-      </View>
+      </div>
     </div>
   );
 };

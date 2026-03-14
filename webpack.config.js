@@ -2,10 +2,8 @@ const path = require("path");
 const fs = require('fs');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const { CleanWebpackPlugin } = require("clean-webpack-plugin");
-const Dotenv = require("dotenv-webpack");
 const webpack = require('webpack');
-
+const macros = require('unplugin-parcel-macros');
 module.exports = {
   mode: "development",
   entry: ['./src/index.js'],
@@ -21,16 +19,18 @@ module.exports = {
       views: path.resolve(__dirname, "src/views"),
       services: path.resolve(__dirname, "src/services"),
       utils: path.resolve(__dirname, "src/utils"),
+      "@react-spectrum/s2/style/dist/style-macro.mjs": false
     },
     extensions: [".tsx", ".ts", ".js", ".jsx", ".svg", ".css", ".json", ".psd"],
     fallback: {
-      "fs": false,
-      "os": false,
-      "path": false,
-      "http": false,
-      "https": false,
-      "zlib": false,
-      "stream": false
+      fs: false,
+      os: false,
+      path: false,
+      http: false,
+      https: false,
+      zlib: false,
+      stream: false,
+      url: false
     }
   },
   module: {
@@ -81,6 +81,9 @@ module.exports = {
     ],
   },
   plugins: [
+    macros.webpack({
+      include: [/\.[cm]?[jt]sx?$/, /node_modules\/@react-spectrum\/s2/],
+    }),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       title: "Bulk Operations Tool",
@@ -110,8 +113,8 @@ module.exports = {
     server: {
       type: 'https',
       options: {
-        key: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.key')), 
-        cert: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.crt')) 
+        key: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.key')),
+        cert: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.crt'))
       }
     },
   },

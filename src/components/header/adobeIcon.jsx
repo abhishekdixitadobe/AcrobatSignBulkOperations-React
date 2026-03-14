@@ -15,7 +15,7 @@
  * from Adobe.
 **************************************************************************/
 
-import React from "react";
+
 
 export const AdobeIcon = ({
     width = '240',

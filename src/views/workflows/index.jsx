@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading} from '@adobe/react-spectrum';
+import { Cell, Column, Row, TableView, TableBody, TableHeader, Heading } from "@react-spectrum/s2";
+import { style } from "@react-spectrum/s2/style";
 import Footer from "../../components/footer";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { setWidgetsAgreements } from "../../redux/webformAgreementsSlice";
 
-const WorkflowPage = () => {  
+const WorkflowPage = () => {
   const widgets = useSelector((state) => state.widgets || []);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
   const authState = useSelector((state) => state.auth || {});
@@ -27,12 +28,12 @@ const WorkflowPage = () => {
     const idsToDownload = selectedKeys === "all"
       ? widgets.map((widget) => widget.id)
       : Array.from(selectedKeys);
-  
+
     if (idsToDownload.length === 0) {
       alert("No widgets selected to fetch associated agreements.");
       return;
     }
-  
+
     try {
       // Send selected IDs to the backend and fetch agreements
       const response = await fetch('/api/widgets-agreements', {
@@ -43,34 +44,34 @@ const WorkflowPage = () => {
         },
         body: JSON.stringify({ ids: idsToDownload }),
       });
-  
+
       if (!response.ok) throw new Error("Failed to fetch agreements from the server.");
-  
+
       // Parse the JSON response
       const data = await response.json();
-  
+
       // Extract userAgreementList
       const userAgreementList = data.userAgreementList || [];
       console.log('Fetched userAgreementList:', userAgreementList);
-  
+
       if (userAgreementList.length === 0) {
         alert("No agreements found for the selected widgets.");
         return;
       }
       dispatch(setWidgetsAgreements(userAgreementList));
       navigate("/widgetsAgreements");
-  
+
     } catch (error) {
       console.error("Get agreements failed:", error);
       alert("Failed to fetch agreements for the selected widgets. Please try again.");
     }
   };
-  
+
 
   const downloadAllasZip = async () => {
     const idsToDownload = selectedKeys === "all"
-    ? widgets.map((agreement) => agreement.id)
-    : Array.from(selectedKeys);
+      ? widgets.map((agreement) => agreement.id)
+      : Array.from(selectedKeys);
 
     if (idsToDownload.length === 0) {
       alert("No widgets selected for download.");
@@ -80,21 +81,21 @@ const WorkflowPage = () => {
     try {
       const zip = new JSZip();
 
-       // Filter selected widgets based on selected keys
-       const selectedWidgets = widgets.filter(widget => idsToDownload.includes(widget.id));
+      // Filter selected widgets based on selected keys
+      const selectedWidgets = widgets.filter(widget => idsToDownload.includes(widget.id));
 
-       // Convert selected widgets to CSV format
-       let csvContent = "ID,Widget Name,Widget url,Status\n";
-       selectedWidgets.forEach(widget => {
-         csvContent += `${widget.id},${widget.name},${widget.url},${widget.status}\n`;
-       });
- 
-       // Add CSV content to the ZIP file
-       zip.file("selected_widgets.csv", csvContent);
- 
-       // Generate the ZIP file and trigger download
-       const blob = await zip.generateAsync({ type: "blob" });
-       saveAs(blob, "selected_widgets.zip");
+      // Convert selected widgets to CSV format
+      let csvContent = "ID,Widget Name,Widget url,Status\n";
+      selectedWidgets.forEach(widget => {
+        csvContent += `${widget.id},${widget.name},${widget.url},${widget.status}\n`;
+      });
+
+      // Add CSV content to the ZIP file
+      zip.file("selected_widgets.csv", csvContent);
+
+      // Generate the ZIP file and trigger download
+      const blob = await zip.generateAsync({ type: "blob" });
+      saveAs(blob, "selected_widgets.zip");
 
 
     } catch (error) {
@@ -105,59 +106,80 @@ const WorkflowPage = () => {
 
 
   return (
-    <Grid
-      areas={["content", "footer"]}
-      height="100%" // Subtract the height of the footer
-      width="100%"
-      columns={["1fr"]}
-      rows={["1fr", "auto"]}
-      marginTop={"size-200"}
-    >
-    <View gridArea="content" width="75%" marginX="auto" overflow="auto">
+    <div
+      className={style({
+        display: "grid",
+        gridTemplateAreas: ["content", "footer"],
+        height: "full",
+        width: "full",
+        gridTemplateColumns: ["1fr"],
+        gridTemplateRows: ["1fr", "auto"],
+        marginTop: 16
+      })}>
+      <div
+        className={style({
+          gridArea: "content",
+          width: "[75%]",
+          marginX: "[auto]",
+          overflow: "auto"
+        })}>
         <Heading level={2}>Total Widgets: {widgets.length}</Heading>
-        <TableView 
-              selectionMode="multiple"
-              aria-label="Widgets Table" 
-              height="size-6000" 
-              gap="size-150" 
-              width="100%"
-              selectedKeys={selectedKeys}
-              onSelectionChange={setSelectedKeys}
+        <TableView
+          selectionMode="multiple"
+          aria-label="Widgets Table"
+          gap="12"
+          selectedKeys={selectedKeys}
+          onSelectionChange={setSelectedKeys}
+          styles={style({
+            height: 480,
+            width: "full"
+          })}
         >
-        <TableHeader columns={columns}>
-          {(column) => (
-            <Column key={column.uid} align="start">
-              {column.name}
-            </Column>
-          )}
-        </TableHeader>
-        <TableBody items={widgets}>
-          {(item) => (
-            <Row key={item.id}>
-              <Cell>{item.id || "N/A"}</Cell>
-              <Cell>{item.name || "N/A"}</Cell>
-              <Cell>{item.url || "N/A"}</Cell>
-              <Cell>{item.status || "N/A"}</Cell>
-            </Row>
-          )}
-        </TableBody>
-      </TableView>
-    </View>
-     <View gridArea="footer" width="100%" height={"size-1000"}>
-     <Footer
-       showDownload={false}
-       showDownloadList={true}
-       showGetAgreements={true}
-       showDownloadFormField = {false}
-       downloadList={async () => {
-         downloadAllasZip();
-       }}
-       agreementList={async () => {
-        agreementList();
-      }}
-     />
-   </View>
- </Grid>
+          <TableHeader columns={columns}>
+            {(column) => (
+              <Column
+                id={column.uid}
+                align="start"
+                isRowHeader={column.uid === "id"}
+              >
+                {column.name}
+              </Column>
+            )}
+          </TableHeader>
+
+          <TableBody items={widgets}>
+            {(item) => (
+              <Row id={String(item.id)} columns={columns}>
+                <Cell>{item.id || "N/A"}</Cell>
+                <Cell>{item.name || "N/A"}</Cell>
+                <Cell>{item.url || "N/A"}</Cell>
+                <Cell>{item.status || "N/A"}</Cell>
+              </Row>
+            )}
+          </TableBody>
+        </TableView>
+
+      </div>
+      <div
+        className={style({
+          gridArea: "footer",
+          width: "full",
+          height: 80
+        })}>
+        <Footer
+          showDownload={false}
+          showDownloadList={true}
+          showGetAgreements={true}
+          showDownloadFormField={false}
+          downloadList={async () => {
+            downloadAllasZip();
+          }}
+          agreementList={async () => {
+            agreementList();
+          }}
+        />
+      </div>
+    </div>
   );
 };
 
