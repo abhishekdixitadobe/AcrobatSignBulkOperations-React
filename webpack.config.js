@@ -4,6 +4,8 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const webpack = require('webpack');
 const macros = require('unplugin-parcel-macros');
+const { CleanWebpackPlugin } =require('clean-webpack-plugin');
+const Dotenv=require('dotenv-webpack');
 module.exports = {
   mode: "development",
   entry: ['./src/index.js'],
@@ -19,7 +21,7 @@ module.exports = {
       views: path.resolve(__dirname, "src/views"),
       services: path.resolve(__dirname, "src/services"),
       utils: path.resolve(__dirname, "src/utils"),
-      "@react-spectrum/s2/style/dist/style-macro.mjs": false
+      "@react-spectrum/s2/style/dist/style-macro.mjs": path.resolve(__dirname, "node_modules/@react-spectrum/s2/style/dist/style-macro.mjs")
     },
     extensions: [".tsx", ".ts", ".js", ".jsx", ".svg", ".css", ".json", ".psd"],
     fallback: {
@@ -36,13 +38,19 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /style-macro\.(mjs|cjs)$/,
+        include: /node_modules\/@react-spectrum\/s2/,
+        use: [path.resolve(__dirname, 'src/loaders/patch-style-macro-loader.js')],
+      },
+      {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-react'],
-            sourceMaps: true, // Enable source maps
+            presets: [['@babel/preset-react', { runtime: 'automatic' }]],
+            plugins: ['@babel/plugin-syntax-import-attributes'],
+            sourceMaps: true,
           }
         }
       },

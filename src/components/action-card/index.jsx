@@ -48,10 +48,6 @@ const ActionCard = ({
               fillStyle="fill"
               onPress={handleNavigation}
               isDisabled={isDisabled}
-              styles={style({
-                cursor: "pointer",
-                whiteSpace: "nowrap"
-              })}
             >
               <Text>Get started</Text>
             </Button>

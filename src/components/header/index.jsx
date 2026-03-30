@@ -102,12 +102,7 @@ const Header = () => {
                 <Button
                   onPress={handleBackClick}
                   aria-label={"Head Back Button"}
-                  styles={style({
-                    cursor: "pointer"
-                  })}
-                  fillStyle={{
-                    border: "none"
-                  }}
+                  fillStyle="plain"
                 >
                   <ChevronLeft size="M" />
                 </Button>

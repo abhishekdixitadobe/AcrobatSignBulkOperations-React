@@ -27,7 +27,7 @@ const Hero = () => {
       style={{
         backgroundImage: `url(${background})`,
         backgroundRepeat: "no-repeat",
-        height: "100px",
+        height: "200px",
         backgroundSize: "cover",
         overflow: "hidden",
         borderRadius: "20px",
@@ -46,15 +46,15 @@ const Hero = () => {
         <Text
           style={{
             fontSize: "40px",
-            color: "var(--spectrum-global-color-gray-100)"
+            color: "#ffffff"
           }}
         >
           Bulk Operations Tool
         </Text>
         <Text style={{
-          color: "var(--spectrum-global-color-gray-100)"
+          color: "#ffffff"
         }}>
-        One Stop Solution for actions in bulk.
+          One Stop Solution for actions in bulk.
         </Text>
         
       </div>

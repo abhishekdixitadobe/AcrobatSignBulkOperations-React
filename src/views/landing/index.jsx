@@ -1,4 +1,4 @@
-import { Heading, Text, View } from "@react-spectrum/s2";
+import { View } from "@react-spectrum/s2";
 import { style } from "@react-spectrum/s2/style";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -7,7 +7,6 @@ import ActionCard from "../../components/action-card";
 import Hero from "../../components/hero";
 import useCaseData from "./useCaseData";
 import { reset } from "../../redux/navState";
-import ProtectedRoute from "../../components/protected-route";
 
 const Landing = () => {
   const dispatch = useDispatch();
@@ -45,7 +44,7 @@ const Landing = () => {
         <div
           className={style({
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
+            gridTemplateColumns: "[repeat(3,_minmax(0,1fr))]",
             gap: 24,
             marginBottom: 80
           })}

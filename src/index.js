@@ -40,24 +40,20 @@ const App = () => {
           <ToastContainer placement="top" />
           <div
             className={style({
-              display: "grid",
-              gridTemplateAreas: ["header header", "content content"],
-              gridTemplateColumns: ["1fr"],
-              gridTemplateRows: [64, "auto"],
+              display: "flex",
+              flexDirection: "column",
               height: "full"
             })}>
             <div
-              borderBottomColor="gray-300"
               className={style({
-                gridArea: "header",
-                borderBottomWidth: 1
+                borderBottomWidth: 1,
+                borderBottomColor: "gray-300"
               })}>
               <Header />
             </div>
             <div
-              min-height="100%"
               className={style({
-                gridArea: "content",
+                flexGrow: 1,
                 backgroundColor: "gray-75"
               })}>
               <AppRouter />
