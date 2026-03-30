@@ -1,30 +1,29 @@
-import { TableView, TableHeader, TableBody, Row, Cell, ActionButton, Column } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
-import Close from "@react-spectrum/s2/icons/Close";
-
+import {
+  TableView,
+  TableHeader,
+  TableBody,
+  Row,
+  Cell,
+  ActionButton,
+  Column,
+  Flex,
+} from "@adobe/react-spectrum";
+import Close from "@spectrum-icons/workflow/Close";
+import React from "react";
 
 const FileDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
   return (
-    <div
-      className={style({
-        display: "flex",
-        justifyContent: "center",
-        height: "full"
-      })}>
-      <TableView aria-label="File Display" styles={style({
-        width: 400
-      })}>
+    <Flex justifyContent="center" height="100%">
+      <TableView aria-label="File Display" width={"size-5000"}>
         <TableHeader>
-          <Column id="filename" align="start" isRowHeader={true}>
+          <Column key="filename" align="start">
             File Name
           </Column>
-          <Column id="remove" styles={style({
-            maxWidth: 80
-          })} />
+          <Column key="remove" maxWidth={80} />
         </TableHeader>
         <TableBody>
           {filledSrc.map((file, index) => (
-            <Row id={index} key={index}>
+            <Row key={index}>
               <Cell>{file.name}</Cell>
               <Cell>
                 <ActionButton
@@ -38,7 +37,7 @@ const FileDisplay = ({ filledSrc, handleRemoveIndividualClick }) => {
           ))}
         </TableBody>
       </TableView>
-    </div>
+    </Flex>
   );
 };
 

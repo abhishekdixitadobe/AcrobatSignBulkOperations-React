@@ -15,22 +15,29 @@
  * from Adobe.
  **************************************************************************/
 
-
+import React, { useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import Landing from "./views/landing";
+import Result from "./views/result";
 import Upload from "./views/upload";
+import Info from "./views/info";
 import Login from "./views/login";
 import OAuthCallback from "./components/oauth-callback"; // Handle OAuth callback
-import IntegrationCallback from "./components/integrationkey-callback"; // Handle OAuth callback
 import ProtectedRoute from "./components/protected-route"; // Import ProtectedRoute component
 import AgreementsPage from "./views/agreements";
-import AdminLogin from "./views/admin";
+import AdminLogin from "./views/admin"
 import TemplatePage from "./views/templates";
 import WidgetsPage from "./views/widgets";
 import WidgetsAgreementsPage from "./views/widgets/widgetsAgreements";
 
 const AppRouter = () => {
-  const basename = window.location.pathname.slice(
+  const [context, setContext] = useState(null);
+
+  const handleContextChange = (payload) => {
+    setContext(payload);
+  };
+
+  const basename = window.location.pathname.substr(
     0,
     window.location.pathname.lastIndexOf("/")
   );
@@ -42,7 +49,6 @@ const AppRouter = () => {
       <Route path={`${basename}/adminLogin/`} element={<AdminLogin />} />
       {/* OAuth callback route */}
       <Route path={`${basename}/callback`} element={<OAuthCallback />} />
-      <Route path={`${basename}/integrationKey`} element={<IntegrationCallback />} />
 
       {/* Protected routes */}
       <Route
@@ -57,7 +63,7 @@ const AppRouter = () => {
         path={`${basename}/agreementsList/`}
         element={
           <ProtectedRoute>
-            <AgreementsPage />
+            <AgreementsPage onContextChange={(context) => handleContextChange(context)} />
           </ProtectedRoute>
         }
       />
@@ -65,7 +71,7 @@ const AppRouter = () => {
         path={`${basename}/templates/`}
         element={
           <ProtectedRoute>
-            <TemplatePage />
+            <TemplatePage onContextChange={(context) => handleContextChange(context)} />
           </ProtectedRoute>
         }
       />
@@ -73,7 +79,7 @@ const AppRouter = () => {
         path={`${basename}/widgets/`}
         element={
           <ProtectedRoute>
-            <WidgetsPage />
+            <WidgetsPage onContextChange={(context) => handleContextChange(context)} />
           </ProtectedRoute>
         }
       />
@@ -81,7 +87,7 @@ const AppRouter = () => {
         path={`${basename}/widgetsAgreements/`}
         element={
           <ProtectedRoute>
-            <WidgetsAgreementsPage />
+            <WidgetsAgreementsPage onContextChange={(context) => handleContextChange(context)} />
           </ProtectedRoute>
         }
       />
@@ -90,6 +96,22 @@ const AppRouter = () => {
         element={
           <ProtectedRoute>
             <Upload />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basename}/result/`}
+        element={
+          <ProtectedRoute>
+            <Result />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path={`${basename}/info/`}
+        element={
+          <ProtectedRoute>
+            <Info />
           </ProtectedRoute>
         }
       />

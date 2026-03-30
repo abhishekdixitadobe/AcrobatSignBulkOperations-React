@@ -16,7 +16,7 @@
 **************************************************************************/
 
 import React, { useState } from 'react';
-import { style } from "@react-spectrum/s2/style";
+import { Flex, View, Dialog, DialogContainer, Content, ProgressCircle, Heading, Text } from '@adobe/react-spectrum';
 import PropertyRail from './prop-rail';
 import { useLocation } from 'react-router-dom';
 import JobConfig from './job-config';
@@ -29,12 +29,17 @@ import { getSignedURL } from '../../utils/aws-client';
 
 
 const SetupView = () => {
+    const segments = useSelector((state) => state.app.segments);
+    const regions = useSelector((state) => state.app.segments);
+    const selectedBackground = useSelector((state) => state.app.selectedBackground);
     const jobStatus = useSelector((state) => state.apis.jobStatus);
+    const currentCall = useSelector((state) => state.apis.currentCall);
     
     const dispatch = useDispatch();
     const location = useLocation();
 
     const [inputFile, setInputFile] = useState(null);
+    const [inProgress, setInProgress] = useState(false);
     const [previewImages, setPreviewImages] = useState(null);
     const [finalOutput, setFinalOutput] = useState(null);
 
@@ -80,49 +85,29 @@ const SetupView = () => {
     } 
 
     return (
-        <div
-            className={style({
-                display: "flex",
-                flexDirection: "row",
-                gap: "[50px]",
-                height: "full",
-                width: "full"
-            })}>
-            {jobStatus === 'ready'  &&
-                <JobConfig onImageDrop={onImageDrop}/>
-            }
-            {jobStatus === 'running' &&
-                <div
-                    className={style({
-                        display: "flex",
-                        flexDirection: "column",
-                        width: "full",
-                        height: "full",
-                        alignItems: "center"
-                    })}>
-                    <div
-                        className={style({
-                            display: "flex",
-                            flexDirection: "row",
-                            width: "full",
-                            alignItems: "center"
-                        })}>
-                        
-                    </div>
-                </div>
-            }
-            {jobStatus === 'preview' &&
-                <PreviewResults images={previewImages} onContinue={renderFinal}/>
-            }
-            {jobStatus === 'final' &&
-                 <ImageResults images={finalOutput}/>
-            }
-            <div className={style({
-                height: "full"
-            })}>
-                <PropertyRail context={location.state} width={'480'} onExecute={runWorkflow} />
-            </div>
-        </div>
+        <Flex direction={'row'} gap={50} height={'100%'} width={'100%'}>
+                {jobStatus === 'ready'  &&
+                    <JobConfig onImageDrop={onImageDrop}/>
+                }
+                {jobStatus === 'running' &&
+                    <Flex direction={'column'} width={'100%'} height={'100%'} alignItems={'center'}>
+                        <Flex direction={'row'} width={'100%'} alignItems={'center'}>
+                            
+                        </Flex>
+                    </Flex>
+                }
+                {jobStatus === 'preview' &&
+                    <PreviewResults images={previewImages} onContinue={renderFinal}/>
+                }
+                {jobStatus === 'final' &&
+                     <ImageResults images={finalOutput}/>
+                }
+                
+            
+            <View height={'100%'}>
+                <PropertyRail context={location.state} width={'size-6000'} onExecute={runWorkflow} />
+            </View>
+        </Flex>
     );
 }
 

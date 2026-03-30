@@ -1,1 +1,0 @@
-"C:\Users\abhishekd\OneDrive - Adobe\Abhishek\Adobe_Oct_21\sonarqube-10.8.0.100206\sonar-scanner-6.2.1.4610-windows-x64\bin"\sonar-scanner.bat -D"sonar.projectKey=AcrobatSignBulkOperations-React" -D"sonar.sources=." -D"sonar.host.url=http://localhost:9000" -D"sonar.token=sqp_f42312755ce9f5001e33d67cef10c43e1af925fc"

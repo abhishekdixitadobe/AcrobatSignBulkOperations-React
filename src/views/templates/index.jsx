@@ -1,143 +1,156 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { Cell, Column, Row, TableView, TableBody, TableHeader, Heading } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
+import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading} from '@adobe/react-spectrum';
 import Footer from "../../components/footer";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { downloadFilesAsZip, downloadList } from "../../services/apiService";
-const TemplatePage = () => {
-  const agreementAssetsResults = useSelector((state) => state.templates || []);
-  const columns = [
-    { name: "ID", uid: "id" },
-    { name: "Template Name", uid: "name" },
-    { name: "Owner Email", uid: "ownerEmail" },
-    { name: "Sharing Mode", uid: "sharingMode" },
-    { name: "Status", uid: "status" },
-  ];
+
+const TemplatePage = () => {  
+  const templates = useSelector((state) => state.templates || []);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
+  //let [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([2]));
   const authState = useSelector((state) => state.auth || {});
+  const isAuthenticated = authState.isAuthenticated || false;
+  const user = authState.user;
+    
   const token = authState.token;
 
-  // Flatten the grouped results into an array
-  const templateAssetsResults =
-    agreementAssetsResults.templateAssetsResults || {};
+  console.log("templates in TemplatePage:", templates);
 
-  const flattenedAgreements = Object.entries(templateAssetsResults).flatMap(
-    ([email, result]) =>
-      (result.libraryDocuments || []).map((doc) => ({
-        ...doc,
-        email, // append the email
-      }))
-  );
+  const columns = [
+    { name: 'ID', uid: 'id' },
+    { name: 'Template Name', uid: 'name' },
+    { name: 'Owner Email', uid: 'ownerEmail' },
+    { name: 'Sharing Mode', uid: 'sharingMode' },
+    { name: 'Status', uid: 'status' },
+  ];
 
-  const handleDownloadList = async (fileName) => {
-    const selectedRows =
-      selectedKeys === "all"
-        ? flattenedAgreements
-        : flattenedAgreements.filter((libraryDocument) =>
-          selectedKeys.has(libraryDocument.id)
-        );
+  const downloadFormField = async () => {
+    const idsToDownload = selectedKeys === "all"
+    ? agreements.map((agreement) => agreement.id)
+    : Array.from(selectedKeys);
 
-    const idsToDownload = selectedRows.map((row) => row.id);
-    const emailsToDownload = selectedRows.map((row) => row.email);
+    if (idsToDownload.length === 0) {
+      alert("No templates selected for download.");
+      return;
+    }
 
-    await downloadList(idsToDownload, flattenedAgreements, fileName, emailsToDownload);
+    try {
+      const zip = new JSZip();
+
+      // Send selected IDs to backend and get back the files
+      const response = await fetch('/api/download-templateFormfields', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authState.token}`,
+        },
+        body: JSON.stringify({ ids: idsToDownload  }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to fetch template formfields from the server.");
+
+          // Convert response to a Blob and download as a zip file
+      const blob = await response.blob();
+      saveAs(blob, "formfields.zip");
+
+
+    } catch (error) {
+      console.error("Download Form fields failed:", error);
+      alert("Failed to download form fields. Please try again.");
+    }
   };
 
-  const handleDownload = async (endpoint, fileName) => {
-    const selectedRows = selectedKeys === "all"
-      ? flattenedAgreements
-      : flattenedAgreements.filter((libraryDocument) =>
-        selectedKeys.has(libraryDocument.id)
-      );
+  const downloadAllasZip = async () => {
+    const idsToDownload = selectedKeys === "all"
+    ? agreements.map((agreement) => agreement.id)
+    : Array.from(selectedKeys);
 
-    const agreementsToDownload = selectedRows.map((row) => ({
-      id: row.id,
-      email: row.email,
-    }));
+    if (idsToDownload.length === 0) {
+      alert("No template selected for download.");
+      return;
+    }
 
-    await downloadFilesAsZip(endpoint, agreementsToDownload, token, fileName, flattenedAgreements);
+    try {
+      const zip = new JSZip();
+
+      // Send selected IDs to backend and get back the files
+      const response = await fetch('/api/download-templateDocument', {
+        method: 'POST',
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authState.token}`,
+        },
+        body: JSON.stringify({ ids: idsToDownload  }),
+      });
+      
+      if (!response.ok) throw new Error("Failed to fetch template document from the server.");
+
+          // Convert response to a Blob and download as a zip file
+      const blob = await response.blob();
+      saveAs(blob, "templates.zip");
+
+
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert("Failed to download templates documents. Please try again.");
+    }
   };
+
 
   return (
-    <div
-      className={style({
-        display: "grid",
-        gridTemplateAreas: ["content", "footer"],
-        height: "full",
-        width: "full",
-        gridTemplateColumns: ["1fr"],
-        gridTemplateRows: ["1fr", "auto"],
-        marginTop: 16
-      })}>
-      <div
-        className={style({
-          gridArea: "content",
-          width: "[75%]",
-          marginX: "[auto]",
-          overflow: "auto"
-        })}>
-        <Heading level={2}>Total Templates: {flattenedAgreements.length}</Heading>
-        <TableView
-          selectionMode="multiple"
-          aria-label="Template Table"
-          gap="12"
-          selectedKeys={selectedKeys}
-          onSelectionChange={setSelectedKeys}
-          styles={style({
-            height: 480,
-            width: "full"
-          })}
+    <Grid
+      areas={["content", "footer"]}
+      height="100%" // Subtract the height of the footer
+      width="100%"
+      columns={["1fr"]}
+      rows={["1fr", "auto"]}
+      marginTop={"size-200"}
+    >
+    <View gridArea="content" width="75%" marginX="auto" overflow="auto">
+        <Heading level={2}>Total Templates: {templates.length}</Heading>
+        <TableView 
+              selectionMode="multiple"
+              aria-label="Template Table" 
+              height="size-6000" 
+              gap="size-150" 
+              width="100%"
+              selectedKeys={selectedKeys}
+              onSelectionChange={setSelectedKeys}
         >
-          <TableHeader columns={columns}>
-            {(column) => (
-              <Column
-                id={column.uid}
-                align="start"
-                isRowHeader={column.uid === "id"}
-              >
-                {column.name}
-              </Column>
-            )}
-          </TableHeader>
-
-          <TableBody items={flattenedAgreements}>
-            {(item) => (
-              <Row id={String(item.id)} columns={columns}>
-                <Cell>{item.id || "N/A"}</Cell>
-                <Cell>{item.name || "N/A"}</Cell>
-                <Cell>{item.ownerEmail || "N/A"}</Cell>
-                <Cell>{item.sharingMode || "N/A"}</Cell>
-                <Cell>{item.status || "N/A"}</Cell>
-              </Row>
-            )}
-          </TableBody>
-        </TableView>
-
-      </div>
-      <div
-        className={style({
-          gridArea: "footer",
-          width: "full",
-          height: 80
-        })}>
-        <Footer
-          showDownload={true}
-          showDownloadList={true}
-          showDownloadFormField={true}
-          downloadList={async () => {
-            handleDownloadList("templates.zip");
-          }}
-          downloadOnPress={async () =>
-            handleDownload("/api/download-templateDocument", "templates.zip")
-          }
-          downloadFormField={async () =>
-            handleDownload("/api/download-templateFormfields", "formfields.zip")
-          }
-        />
-      </div>
-    </div>
+        <TableHeader columns={columns}>
+          {(column) => (
+            <Column key={column.uid} align="start">
+              {column.name}
+            </Column>
+          )}
+        </TableHeader>
+        <TableBody items={templates}>
+          {(item) => (
+            <Row key={item.id}>
+              <Cell>{item.id || "N/A"}</Cell>
+              <Cell>{item.name || "N/A"}</Cell>
+              <Cell>{item.ownerEmail || "N/A"}</Cell>
+              <Cell>{item.sharingMode || "N/A"}</Cell>
+              <Cell>{item.status || "N/A"}</Cell>
+            </Row>
+          )}
+        </TableBody>
+      </TableView>
+    </View>
+     <View gridArea="footer" width="100%" height={"size-1000"}>
+     <Footer
+       showDownload={true}
+       showDownloadFormField = {true}
+       downloadOnPress={async () => {
+         downloadAllasZip();
+       }}
+       downloadFormField={async () => {
+        downloadFormField();
+      }}
+     />
+   </View>
+ </Grid>
   );
 };
 

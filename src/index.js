@@ -15,9 +15,8 @@
  * from Adobe.
  **************************************************************************/
 
-import { defaultTheme, Provider } from "@react-spectrum/s2";
-import { ToastContainer } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
+import { defaultTheme, Grid, Provider, View } from "@adobe/react-spectrum";
+import { ToastContainer } from "@react-spectrum/toast";
 import React, { useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { Provider as ReduxProvider } from "react-redux";
@@ -32,33 +31,56 @@ const rootElement = document.getElementById("root");
 const root = createRoot(rootElement);
 
 const App = () => {
+  // // Fetch sessionID from /api/session
+  // useEffect(() => {
+  //   const fetchSession = () => {
+  //     fetch("/api/session")
+  //       .then((res) => {
+  //         if (!res.ok) {
+  //           throw new Error(`HTTP error! status: ${res.status}`);
+  //         }
+  //         return res.json();
+  //       })
+  //       .then((data) => {
+  //         console.log("SessionID: ", data.sessionID);
+  //       })
+  //       .catch((error) => {
+  //         console.error("There was an error!", error);
+  //         // Retry after 5 seconds
+  //         setTimeout(fetchSession, 5000);
+  //       });
+  //   };
+
+  //   // Call the function initially
+  //   fetchSession();
+  // }, []);
 
   return (
     <Provider theme={defaultTheme} colorScheme="light">
       <BrowserRouter>
         <div className="applicationContentWrapper">
-          <ToastContainer placement="top" />
-          <div
-            className={style({
-              display: "flex",
-              flexDirection: "column",
-              height: "full"
-            })}>
-            <div
-              className={style({
-                borderBottomWidth: 1,
-                borderBottomColor: "gray-300"
-              })}>
+          <ToastContainer />
+          <Grid
+            areas={["header header", "content content"]}
+            columns={["1fr"]}
+            rows={["size-800", "auto"]}
+            height="100%"
+          >
+            <View
+              gridArea="header"
+              borderBottomColor="gray-300"
+              borderBottomWidth="thin"
+            >
               <Header />
-            </div>
-            <div
-              className={style({
-                flexGrow: 1,
-                backgroundColor: "gray-75"
-              })}>
+            </View>
+            <View
+              gridArea="content"
+              min-height="100%"
+              backgroundColor="gray-100"
+            >
               <AppRouter />
-            </div>
-          </div>
+            </View>
+          </Grid>
         </div>
       </BrowserRouter>
     </Provider>

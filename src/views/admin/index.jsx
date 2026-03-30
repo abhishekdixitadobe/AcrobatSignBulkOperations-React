@@ -1,13 +1,11 @@
-import React, {useState } from "react";
-import { Provider, defaultTheme } from '@react-spectrum/s2';
-import { useDispatch } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { Provider, defaultTheme, Button, TextField, Form, Heading, View } from '@adobe/react-spectrum';
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer";
 import AgreementAction from "../../components/agreement-action";
-import { Button, TextField, Form, Heading, ToastQueue } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
 
-function Setup() {
+function setup() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -17,11 +15,6 @@ function Setup() {
 
   const handleLogin = async (params) => {
     try {
-      if (!email || !password) {
-        ToastQueue.negative("Please enter valid credentials", {timeout: 5000});
-        return;
-      }
-
       const apiUrl = `/api/admin-login`;
       const reqBody = { 
         email,
@@ -37,46 +30,43 @@ function Setup() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Fetched Agreements Data:", data);
         
         dispatch(setAgreements(data.agreementAssetsResults));
         navigate("/agreementsList");
       } else {
         console.error("API call failed", response.statusText);
-        ToastQueue.negative("An error occurred. Please try again later.", {timeout: 5000});
+        alert("Failed to fetch agreements. Please try again later.");
       }
     } catch (error) {
       console.error("Error making API call:", error);
-      ToastQueue.negative("An error occurred. Please try again later.", {timeout: 5000});
+      alert("An error occurred. Please try again later.");
     } finally {
+      setIsLoading(false);
     }
+    console.log("Logging in...");
   };
 
   return (
     <Provider theme={defaultTheme}>
-      <div
+      <View
+        width="size-3600"
+        backgroundColor="gray-100"
+        padding="size-200"
+        margin="auto"
+        height="100vh"
         display="flex"
         alignItems="center"
         justifyContent="center"
-        className={style({
-          width: 288,
-          backgroundColor: "gray-75",
-          padding: 16,
-          margin: "[auto]",
-          height: "[100vh]"
-        })}>
-        <Form isRequired necessityIndicator="label">
-          <Heading level={1} style={{
-            textAlign: "center"
-          }}>Login</Heading>
+      >
+          <Heading level={1}>Login</Heading>
           <TextField
             label="Email"
             type="email"
             value={email}
             onChange={setEmail}
             isRequired
-            styles={style({
-              width: "full"
-            })}
+            width="100%"
           />
           <TextField
             label="Password"
@@ -84,32 +74,24 @@ function Setup() {
             value={password}
             onChange={setPassword}
             isRequired
-            styles={style({
-              width: "full"
-            })}
+            width="100%"
           />
           <AgreementAction
             params={{ email, password }}
             onAction={handleLogin}
             buttonText="Login"
-            // isDisabled={!email}
+            isDisabled={!email}
             heading="Bulk Operation Tool setup"
           />
-        </Form>
-      </div>
-      <div
-        className={style({
-          gridArea: "footer",
-          width: "full",
-          height: 80
-        })}>
+      </View>
+      <View gridArea="footer" width="100%" height={"size-1000"}>
         <Footer
           disableBack={true}
           disableExecute={true}
         />
-      </div>
+      </View>
     </Provider>
   );
 }
 
-export default Setup;
+export default setup;

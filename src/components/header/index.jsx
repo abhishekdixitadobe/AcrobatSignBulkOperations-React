@@ -16,13 +16,22 @@
  **************************************************************************/
 
 import React, { useEffect, useState } from "react";
-import { Link, Image, Heading, Button } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
-import AppLogo from "./appLogo.jpg";
-import ChevronLeft from "@react-spectrum/s2/icons/ChevronLeft";
-import { useNavigate, useLocation } from "react-router-dom";
-import { useDispatch, useSelector } from "react-redux";
-import { logoutSuccess } from "../../services/authService";
+import {
+  Flex,
+  View,
+  Link,
+  Image,
+  Heading,
+  Button,
+  Text ,
+} from "@adobe/react-spectrum";
+import AppLogo from "./logo.svg";
+import ChevronLeft from "@spectrum-icons/workflow/ChevronLeft";
+import { useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useSelector } from 'react-redux';
+import { logout } from '../../services/authService'
 
 const Header = () => {
   const location = useLocation();
@@ -36,7 +45,7 @@ const Header = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (location.state?.configs) {
+    if (location.state && location.state.configs) {
       setIsLandingPage(true);
     } else {
       setIsLandingPage(false);
@@ -47,96 +56,57 @@ const Header = () => {
     history(-1);
   };
   const handleLogout = () => {
-    dispatch(logoutSuccess()); // Dispatch the logout action
-    navigate("/login"); // Redirect the user to the login page
+    dispatch(logout());  // Dispatch the logout action
+    navigate('/login');  // Redirect the user to the login page
   };
 
   return (
-    <div
-      className={style({
-        backgroundColor: "gray-25",
-        height: "full"
-      })}>
-      <div
-        className={style({
-          display: "flex",
-          flexDirection: "row",
-          height: "full",
-          gap: 8,
-          alignItems: "center",
-          justifyContent: "space-between"
-        })}>
-        <div className={style({
-          paddingStart: 24
-        })}>
-          <div
-            className={style({
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 8
-            })}>
-            <Link isQuiet href="/">
-              <Image
-                src={AppLogo}
-                alt={"DragonFly-Logo"}
-                styles={style({
-                  height: 32
-                })}
-              />
+    <View backgroundColor={"gray-50"} height="100%">
+      <Flex direction="row" height="100%" gap="size-100" alignItems={"center"} justifyContent="space-between">
+        <View paddingStart={"size-300"}>
+          <Flex direction="row" alignItems="center" gap="size-100">
+            <Link isQuiet>
+              <a href="/">
+                <Image
+                  src={AppLogo}
+                  height={"size-400"}
+                  alt={"DragonFly-Logo"}
+                />
+              </a>
             </Link>
             {!isLandingPage ? (
-              <div className={style({
-                display: "flex",
-                flexDirection: "row"
-              })}>
+              <Flex direction="row">
                 <Heading level={3}>{"Bulk Operations Tool"}</Heading>
-              </div>
+              </Flex>
             ) : (
-              <div
-                className={style({
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center"
-                })}>
+              <Flex direction="row" alignItems="center">
                 <Button
                   onPress={handleBackClick}
                   aria-label={"Head Back Button"}
-                  fillStyle="plain"
+                  UNSAFE_style={{ border: "none" }}
                 >
                   <ChevronLeft size="M" />
                 </Button>
                 <Heading level={3}>{"Back"}</Heading>
-              </div>
+              </Flex>
             )}
-          </div>
-        </div>
+          </Flex>
+        </View>
         {/* Right section with Welcome message and Sign out */}
-        <div className={style({
-          paddingEnd: 24
-        })}>
-          <div
-            className={style({
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "center",
-              gap: 16
-            })}>
-            {isAuthenticated && (
-              <>
-                <Heading level={4}>Welcome, {user.firstName}</Heading>{" "}{/* Display username */}
-                <Button onPress={handleLogout} variant="primary"
-                  styles={style({
-                    cursor: "pointer"
-                  })}>
-                  Sign Out
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
+        <View paddingEnd={"size-300"}>
+          <Flex direction="row" alignItems="center" gap="size-200">
+          {isAuthenticated && (
+            <>
+              <Heading level={4}>Welcome, {user.firstName}</Heading> {/* Display username */}
+              <Button onPress={handleLogout} variant="primary">
+                Sign Out
+              </Button>
+            </>
+              )}
+          </Flex>
+        </View>
+      </Flex>
+    </View>
   );
 };
 

@@ -1,5 +1,4 @@
-import { Form, Heading, Text } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
+import { Form, Grid, Heading, Text, View } from "@adobe/react-spectrum";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
@@ -8,11 +7,14 @@ import UseCaseForm from "../../components/usecase-form";
 import { setRequests, resetProcessApis } from "../../redux/processApis";
 import { resetLogEvents } from "../../redux/logEvent";
 import { setDownloadURLs, resetURLs } from "../../redux/downloadURLs";
+import { agreements } from "../../utils/agreements";
 
 const Upload = () => {
   const location = useLocation();
+  console.log(location.state);
   const configs = location.state.configs;
   const heading = location.state.heading;
+
   const [formData, setFormData] = useState({});
   const [isExecuted, setisExecuted] = useState(false);
 
@@ -64,33 +66,28 @@ const Upload = () => {
       case "/api/webforms":
         results = await agreements(uploadFiles);
         break;
-      default:
+        default:
         break;
     }
     dispatch(setDownloadURLs(results));
   };
 
   return (
-    <div
-      className={style({
-        display: "grid",
-        gridTemplateAreas: ["content", "footer"],
-        height: "full",
-        width: "full",
-        gridTemplateColumns: ["1fr"],
-        gridTemplateRows: ["1fr", "auto"]
-      })}>
-      <div
-        className={style({
-          gridArea: "content",
-          width: "[75%]",
-          marginX: "[auto]"
-        })}>
+    <Grid
+      areas={["content", "footer"]}
+      height="100%"
+      width="100%"
+      columns={["1fr"]}
+      rows={["1fr", "auto"]}
+    >
+      <View gridArea="content" width="75%" marginX="auto">
         {!isExecuted ? (
           <>
             <Heading level={1}>{heading}</Heading>
-            <Text>Agreements will be fetched between the date range.</Text>
-            <Form necessityIndicator="label">
+            <Text>
+            Agreements will be fetched between this date range.
+            </Text>
+            <Form isRequired necessityIndicator="label">
               <UseCaseForm
                 id={configs.formComponentId}
                 onFormChange={handleFormChange}
@@ -99,26 +96,22 @@ const Upload = () => {
             </Form>
           </>
         ) : (
-          ""
+          ''
         )}
-      </div>
-      <div
-        className={style({
-          gridArea: "footer",
-          width: "full",
-          height: 80
-        })}>
+      </View>
+      <View gridArea="footer" width="100%" height={"size-1000"}>
         <Footer
           disableBack={isExecuted}
           disableExecute={isExecuted}
           executeOnPress={() => {
             setisExecuted(false);
             dispatch(setIsDisabled(false));
+            console.log(isExecuted);
             handleAPIRequest();
           }}
         />
-      </div>
-    </div>
+      </View>
+    </Grid>
   );
 };
 

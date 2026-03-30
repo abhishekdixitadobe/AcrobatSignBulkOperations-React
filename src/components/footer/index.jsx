@@ -1,170 +1,98 @@
-import { Button, ButtonGroup } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
-import React, { useState } from "react";
+import { Button, ButtonGroup, Flex, View } from "@adobe/react-spectrum";
+import React from "react";
+import { useLocation } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const Footer = (props) => {
   const {
     disabledBack = false,
+    disabledExecute = false,
+    executeOnPress = () => {},
     showDownload = false,
-    showDownloadFormField = false,
-    showAuditReport = false,
-    showDelete = false,
+    showDownloadFormField =false,
+    showAuditReport =false,
     showDownloadList = false,
     showGetAgreements = false,
-    deleteOnPress = () => {},
     downloadOnPress = () => {},
     downloadList = () => {},
     downloadFormField = () => {},
     downloadAuditReport = () => {},
     agreementList = () => {},
+    configs = null,
+    heading = "",
   } = props;
 
-  const [isLoading, setIsLoading] = useState({
-    download: false,
-    downloadList: false,
-    downloadFormField: false,
-    auditReport: false,
-    delete: false,
-  });
+  const location = useLocation();
+  const isDisabled = false;
 
-  const handleAsyncAction = async (action, key) => {
-    setIsLoading((prev) => ({ ...prev, [key]: true }));
-    try {
-      await action();
-    } finally {
-      setIsLoading((prev) => ({ ...prev, [key]: false }));
-    }
+  const navigate = useNavigate();
+  const handleNavigation = () => {
+    navigate(configs.page, { state: { heading, configs } });
   };
 
   return (
-    <div
-      className={style({
-        backgroundColor: "gray-25",
-        height: "full"
-      })}>
-      <div
-        className={style({
-          display: "flex",
-          flexDirection: "row",
-          height: "full",
-          gap: 8,
-          alignItems: "center"
-        })}>
-        <div
-          className={style({
-            paddingX: 64,
-            width: "full"
-          })}>
-          <div className={style({
-            display: "flex",
-            justifyContent: "space-between"
-          })}>
-            <div className={style({
-              display: "flex",
-              justifyContent: "end"
-            })}>
+    <View backgroundColor={"gray-50"} height="100%">
+      <Flex direction="row" height="100%" gap="size-100" alignItems={"center"}>
+        <View paddingX={"size-800"} width="100%">
+          <Flex justifyContent="space-between">
+            <Flex justifyContent="end">
               <ButtonGroup>
                 <Button
-                  styles={style({
-                    cursor: "pointer"
-                  })}
-                  UNSAFE_className="cursorPointer"
                   variant="secondary"
-                  onPress={() => window.history.back()}
+                  onPress={() => {
+                    window.history.back();
+                  }}
                   isDisabled={disabledBack}
                 >
                   Back
                 </Button>
 
-                {showDownload && (
-                  <Button
-                    styles={style({
-                      cursor: "pointer"
-                    })}
-                    variant="accent"
-                    isPending={isLoading.download}
-                    onPress={() => handleAsyncAction(downloadOnPress, "download")}
-                  >
-                    Download
-                  </Button>
-                )}
-
-                {showDownloadList && (
-                  <Button
-                    styles={style({
-                      cursor: "pointer"
-                    })}
-                    variant="accent"
-                    isPending={isLoading.downloadList}
-                    onPress={() =>
-                      handleAsyncAction(downloadList, "downloadList")
-                    }
-                  >
-                    Download List
-                  </Button>
-                )}
-
-                {showGetAgreements && (
-                  <Button
-                    styles={style({
-                      cursor: "pointer"
-                    })}
-                    variant="accent"
-                    onPress={agreementList}
-                  >
-                    Get Agreements
-                  </Button>
-                )}
-
-                {showDownloadFormField && (
-                  <Button
-                    styles={style({
-                      cursor: "pointer"
-                    })}
-                    variant="accent"
-                    isPending={isLoading.downloadFormField}
-                    onPress={() =>
-                      handleAsyncAction(downloadFormField, "downloadFormField")
-                    }
-                  >
+                {!configs ? (
+                  <>
+                    {showDownload ? (
+                      <Button variant="cta" onPress={downloadOnPress}>
+                        Download
+                      </Button>
+                    ) : ''}
+                  </>
+                ) : ''}
+                {!configs ? (
+                  <>
+                    {showDownloadList ? (
+                      <Button variant="cta" onPress={downloadList}>
+                        Download List
+                      </Button>
+                    ) : ''}
+                  </>
+                ) : ''}
+                 {!configs ? (
+                  <>
+                    {showGetAgreements ? (
+                      <Button variant="cta" onPress={agreementList}>
+                        Get Agreements
+                      </Button>
+                    ) : ''}
+                  </>
+                ) : ''}
+          
+                {showDownloadFormField ? (
+                  <Button variant="cta" onPress={downloadFormField}>
                     Download Form Fields
                   </Button>
-                )}
+                ): ''}
 
-                {showAuditReport && (
-                  <Button
-                    styles={style({
-                      cursor: "pointer"
-                    })}
-                    variant="accent"
-                    isPending={isLoading.auditReport}
-                    onPress={() =>
-                      handleAsyncAction(downloadAuditReport, "auditReport")
-                    }
-                  >
+                {showAuditReport ? (
+                  <Button variant="cta" onPress={downloadAuditReport}>
                     Download Audit Report
                   </Button>
-                )}
-
-                {showDelete && (
-                  <Button
-                    styles={style({
-                      cursor: "pointer"
-                    })}
-                    variant="accent"
-                    isPending={isLoading.delete}
-                    onPress={() => handleAsyncAction(deleteOnPress, "delete")}
-                  >
-                    Delete Agreements
-                  </Button>
-                )}
+                ): ''}
               </ButtonGroup>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+            </Flex>
+          </Flex>
+        </View>
+      </Flex>
+    </View>
   );
 };
 

@@ -1,8 +1,27 @@
-import { Button, Heading, Image, Text, Content, Card } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
+/* ************************************************************************
+ * ADOBE CONFIDENTIAL
+ * ___________________
+ *
+ * Copyright 2024 Adobe
+ * All Rights Reserved.
+ *
+ * NOTICE: All information contained herein is, and remains
+ * the property of Adobe and its suppliers, if any. The intellectual
+ * and technical concepts contained herein are proprietary to Adobe
+ * and its suppliers and are protected by all applicable intellectual
+ * property laws, including trade secret and copyright laws.
+ * Dissemination of this information or reproduction of this material
+ * is strictly forbidden unless prior written permission is obtained
+ * from Adobe.
+ **************************************************************************/
+
+import { Button, Flex, Heading, Image, Text } from "@adobe/react-spectrum";
+import { Card } from "@react-spectrum/card";
+import { Content } from "@react-spectrum/view";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { setAPI, setLandingPage } from "../../redux/navState";
+import React from "react";
 
 const ActionCard = ({
   heading,
@@ -12,47 +31,37 @@ const ActionCard = ({
   isDisabled,
 }) => {
   const navigate = useNavigate();
+
   const dispatch = useDispatch();
 
   const handleNavigation = () => {
+    // navigate(configs.page, { state: { configs } });
     dispatch(setAPI(configs.api));
     dispatch(setLandingPage(false));
+    //navigate("/info", { state: { heading: heading, configs: configs } });
     navigate(configs.page, { state: { heading, configs } });
   };
+
 
   return (
     <Card>
       <Image src={imageUrl} />
       <Heading>{heading}</Heading>
-
       <Content>
-        <div
-          className={style({
-            display: "flex",
-            flexDirection: "row",
-            justifyContent: "space-between"
-          })}
-        >
-          <div className={style({ display: "flex" })}>
-            {description}
-          </div>
-
-          <div
-            className={style({
-              display: "flex",
-              marginStart: 16
-            })}
-          >
+        <Flex direction="row" justifyContent="space-between">
+          <Flex>{description}</Flex>
+          <Flex marginStart="size-200">
             <Button
+              UNSAFE_style={{ whiteSpace: "nowrap" }}
               variant="accent"
-              fillStyle="fill"
+              style="fill"
               onPress={handleNavigation}
               isDisabled={isDisabled}
             >
               <Text>Get started</Text>
             </Button>
-          </div>
-        </div>
+          </Flex>
+        </Flex>
       </Content>
     </Card>
   );

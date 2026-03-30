@@ -1,8 +1,12 @@
-import { Button, Text } from "@react-spectrum/s2";
-import { style } from "@react-spectrum/s2/style";
-
+import { Button, Flex, Text } from "@adobe/react-spectrum";
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { setAPI, setLandingPage } from "../../redux/navState";
 
 const AgreementAction = ({ params, onAction, buttonText = "Submit", isDisabled, configs = {}, heading }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const handleButtonClick = () => {
     if (onAction) {
       onAction(params); // Trigger the passed action with provided parameters
@@ -10,21 +14,16 @@ const AgreementAction = ({ params, onAction, buttonText = "Submit", isDisabled, 
   };
 
   return (
-    <Button
-      variant="accent"
-      fillStyle="fill"
-      onPress={handleButtonClick}
-      isDisabled={isDisabled}
-      styles={style({
-        alignSelf: "end",
-        marginTop: "[15px]",
-        cursor: "pointer"
-      })}
-      style={{
-        whiteSpace: "nowrap"
-      }}>
-      <Text>{buttonText}</Text>
-    </Button>
+        <Button
+          UNSAFE_style={{ whiteSpace: "nowrap" }}
+          variant="accent"
+          style="fill"
+          onPress={handleButtonClick}
+          isDisabled={isDisabled}
+          alignSelf="end"
+        >
+          <Text>{buttonText}</Text>
+        </Button>
   );
 };
 

@@ -2,10 +2,10 @@ const path = require("path");
 const fs = require('fs');
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const { CleanWebpackPlugin } = require("clean-webpack-plugin");
+const Dotenv = require("dotenv-webpack");
 const webpack = require('webpack');
-const macros = require('unplugin-parcel-macros');
-const { CleanWebpackPlugin } =require('clean-webpack-plugin');
-const Dotenv=require('dotenv-webpack');
+
 module.exports = {
   mode: "development",
   entry: ['./src/index.js'],
@@ -21,36 +21,28 @@ module.exports = {
       views: path.resolve(__dirname, "src/views"),
       services: path.resolve(__dirname, "src/services"),
       utils: path.resolve(__dirname, "src/utils"),
-      "@react-spectrum/s2/style/dist/style-macro.mjs": path.resolve(__dirname, "node_modules/@react-spectrum/s2/style/dist/style-macro.mjs")
     },
     extensions: [".tsx", ".ts", ".js", ".jsx", ".svg", ".css", ".json", ".psd"],
     fallback: {
-      fs: false,
-      os: false,
-      path: false,
-      http: false,
-      https: false,
-      zlib: false,
-      stream: false,
-      url: false
+      "fs": false,
+      "os": false,
+      "path": false,
+      "http": false,
+      "https": false,
+      "zlib": false,
+      "stream": false
     }
   },
   module: {
     rules: [
-      {
-        test: /style-macro\.(mjs|cjs)$/,
-        include: /node_modules\/@react-spectrum\/s2/,
-        use: [path.resolve(__dirname, 'src/loaders/patch-style-macro-loader.js')],
-      },
       {
         test: /\.(js|jsx)$/,
         exclude: /node_modules/,
         use: {
           loader: 'babel-loader',
           options: {
-            presets: [['@babel/preset-react', { runtime: 'automatic' }]],
-            plugins: ['@babel/plugin-syntax-import-attributes'],
-            sourceMaps: true,
+            presets: ['@babel/preset-react'],
+            sourceMaps: true, // Enable source maps
           }
         }
       },
@@ -89,9 +81,6 @@ module.exports = {
     ],
   },
   plugins: [
-    macros.webpack({
-      include: [/\.[cm]?[jt]sx?$/, /node_modules\/@react-spectrum\/s2/],
-    }),
     new CleanWebpackPlugin(),
     new HtmlWebpackPlugin({
       title: "Bulk Operations Tool",
@@ -121,8 +110,8 @@ module.exports = {
     server: {
       type: 'https',
       options: {
-        key: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.key')),
-        cert: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.crt'))
+        key: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.key')), 
+        cert: fs.readFileSync(path.resolve(__dirname, 'dev/certs/server.crt')) 
       }
     },
   },

@@ -1,18 +1,9 @@
 import React, { useState, useEffect } from "react";
-
 import {
-    DatePicker,
-    ComboBox,
-    DropZone,
-    IllustratedMessage,
-    Heading,
-    Content,
-    FileTrigger,
-    Button,
-} from "@react-spectrum/s2";
-
-import { style } from "@react-spectrum/s2/style";
-
+    Flex, DatePicker, ComboBox, DropZone,
+    IllustratedMessage, Heading, Content, FileTrigger, Button, Item
+} from "@adobe/react-spectrum";
+import Upload from '@spectrum-icons/illustrations/Upload';
 import AgreementAction from "../../components/agreement-action";
 import { parseDate } from "@internationalized/date";
 import { useDispatch, useSelector } from "react-redux";
@@ -23,7 +14,7 @@ import { readCSV } from "../../utils/csvHelper";
 const WorkflowForm = ({onChange, setUploadFiles}) => {
     const [startDate, setStartDate] = useState(parseDate("2023-01-03"));
     const [endDate, setEndDate] = useState(parseDate("2023-06-03"));
-    const [email, setEmail] = useState("");
+    const [email, setEmail] = useState("abhishekdixitg@gmail.com");
     const [majorId, setMajorId] = useState(null);
     const [isFilled1, setIsFilled1] = useState(false);
     const [workflows, setWorkflows] = useState([]);
@@ -124,18 +115,8 @@ const WorkflowForm = ({onChange, setUploadFiles}) => {
     const isButtonEnabled = email && selectedFiles.length > 0;
     return (
         <>
-            <div
-                className={style({
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: 8
-                })}>
-                <div
-                    className={style({
-                        display: "flex",
-                        flexDirection: "row",
-                        gap: 8
-                    })}>
+            <Flex direction="column" gap="size-100">
+                <Flex direction="row" gap="size-100">
                     <DatePicker label="Start Date" value={startDate} onChange={setStartDate} />
                     <DatePicker label="End Date" value={endDate} onChange={setEndDate} />
                     <AgreementAction
@@ -145,7 +126,7 @@ const WorkflowForm = ({onChange, setUploadFiles}) => {
                         isDisabled={!isButtonEnabled}
                         heading="Agreements"
                     />
-                </div>
+                </Flex>
                 <DragAndDrop
                   heading="Upload agreement Ids list"
                   description="Or, select single CSV file from your computer"
@@ -155,7 +136,7 @@ const WorkflowForm = ({onChange, setUploadFiles}) => {
                   }}
                   setUploadFiles={setUploadFiles}
                 />
-            </div>
+            </Flex>
         </>
     );
 };

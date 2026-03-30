@@ -15,7 +15,7 @@
  * from Adobe.
 **************************************************************************/
 
-import { ToastQueue } from "@react-spectrum/s2";
+import { ToastQueue } from "@react-spectrum/toast";
 
 /**
  * Connected to the React-Spectrum toast component to gracefully display error to the user.

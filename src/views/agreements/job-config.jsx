@@ -17,45 +17,23 @@
 
 import React from 'react';
 import DragAndDrop from '../../components/drag-and-drop';
-import { style } from "@react-spectrum/s2/style";
+import {Flex, View} from '@adobe/react-spectrum';
 import PhotoshopTemplate from '../../components/psd-template';
 import Firefall from '../../components/firefall';
 
 const JobConfig = ({onImageDrop}) => {
-    return (
-        <div
-            className={style({
-                display: "flex",
-                flexDirection: "row",
-                justifyContent: "space-between",
-                width: "full",
-                flexWrap: "wrap"
-            })}>
-            <div
-                className={style({
-                    width: 350,
-                    height: 400,
-                    padding: "[10px]"
-                })}>
-                <DragAndDrop onImageDrop={onImageDrop}/>
-            </div>
-            <div
-                className={style({
-                    width: 350,
-                    height: 400,
-                    padding: "[10px]"
-                })}>
-                <PhotoshopTemplate/>
-            </div>
-            <div
-                className={style({
-                    width: 350,
-                    height: 400,
-                    padding: "[10px]"
-                })}>
-                <Firefall/>
-            </div>
-        </div>
+    return(
+        <Flex direction={'row'} justifyContent={'space-between'} width={'100%'}  wrap>
+                <View width={350} height={400} padding={10}>
+                    <DragAndDrop onImageDrop={onImageDrop}/>
+                </View>
+                <View width={350} height={400}  padding={10}>
+                    <PhotoshopTemplate/>
+                </View>
+                <View width={350} height={400} padding={10}>
+                    <Firefall/>
+                </View>
+            </Flex>
     );
 }
 export default JobConfig;
