@@ -15,23 +15,18 @@
  * from Adobe.
 **************************************************************************/
 
-import { Flex, View, Heading, Text, Link , ProgressCircle, Dialog, DialogContainer, Content} from '@adobe/react-spectrum';
+import { Flex, Heading, Text , ProgressCircle, Dialog, DialogContainer, Content} from '@adobe/react-spectrum';
 import React, { useEffect, useState } from 'react';
-import { addLogEntry } from '../../redux/app';
 import ImageResults from '../../components/image-results';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import PreviewResults from '../../components/preview';
 
 const ProcessingView = ({onContinue}) => {
     const logEntryList = useSelector((state) => state.app.logEntries);
     const selectedBackground = useSelector((state) => state.app.selectedBackground);
-    const dispatch = useDispatch();
 
-
-    const [logEntries, setLogEntries] = useState([]);
     const [isRunning, setIsRunning] = useState(false);
     const [action, setAction] = useState('');
-    const [actionStatus, setActionStatus] = useState('');
     const [showResults, setShowResults] = useState(false);
     const [showPreview, setShowPreview] = useState(false);
     const [previewImages, setPreviewImages] = useState(null);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Cell, Column, Row, TableView, TableBody, TableHeader, Grid, View, Heading} from '@adobe/react-spectrum';
@@ -10,12 +10,7 @@ import { setWidgetsAgreements } from "../../redux/webformAgreementsSlice";
 const WorkflowPage = () => {  
   const widgets = useSelector((state) => state.widgets || []);
   const [selectedKeys, setSelectedKeys] = useState(new Set());
-  //let [selectedKeys, setSelectedKeys] = React.useState<Selection>(new Set([2]));
   const authState = useSelector((state) => state.auth || {});
-  const isAuthenticated = authState.isAuthenticated || false;
-  const user = authState.user;
-    
-  const token = authState.token;
   const navigate = useNavigate();
   const dispatch = useDispatch();
 

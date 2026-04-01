@@ -16,7 +16,7 @@
 **************************************************************************/
 
 import React, { useState } from 'react';
-import { Flex, View, Dialog, DialogContainer, Content, ProgressCircle, Heading, Text } from '@adobe/react-spectrum';
+import { Flex, View} from '@adobe/react-spectrum';
 import PropertyRail from './prop-rail';
 import { useLocation } from 'react-router-dom';
 import JobConfig from './job-config';
@@ -29,17 +29,12 @@ import { getSignedURL } from '../../utils/aws-client';
 
 
 const SetupView = () => {
-    const segments = useSelector((state) => state.app.segments);
-    const regions = useSelector((state) => state.app.segments);
-    const selectedBackground = useSelector((state) => state.app.selectedBackground);
     const jobStatus = useSelector((state) => state.apis.jobStatus);
-    const currentCall = useSelector((state) => state.apis.currentCall);
     
     const dispatch = useDispatch();
     const location = useLocation();
 
     const [inputFile, setInputFile] = useState(null);
-    const [inProgress, setInProgress] = useState(false);
     const [previewImages, setPreviewImages] = useState(null);
     const [finalOutput, setFinalOutput] = useState(null);
 

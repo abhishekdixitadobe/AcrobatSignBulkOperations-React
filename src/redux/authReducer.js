@@ -10,12 +10,12 @@ const authReducer = createSlice({
     name: 'auth', 
     initialState,
     reducers: {
-        login(state, action) {
+        login: (state, action) => {
             state.isAuthenticated = true;
             state.user = action.payload.user; 
             state.token = action.payload.token;  // Set token when logging in
         },
-        logout(state) {
+        logout: (state) => {
             state.isAuthenticated = false;
             state.user = null; 
             state.token = null;  // Clear token on logout

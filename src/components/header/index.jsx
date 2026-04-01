@@ -23,15 +23,12 @@ import {
   Image,
   Heading,
   Button,
-  Text ,
 } from "@adobe/react-spectrum";
-import AppLogo from "./logo.svg";
+import AppLogo from "./appLogo.jpg";
 import ChevronLeft from "@spectrum-icons/workflow/ChevronLeft";
-import { useNavigate } from "react-router-dom";
-import { useLocation } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { useSelector } from 'react-redux';
-import { logout } from '../../services/authService'
+import { useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutSuccess } from "../../services/authService";
 
 const Header = () => {
   const location = useLocation();
@@ -45,7 +42,7 @@ const Header = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (location.state && location.state.configs) {
+    if (location.state?.configs) {
       setIsLandingPage(true);
     } else {
       setIsLandingPage(false);
@@ -56,8 +53,8 @@ const Header = () => {
     history(-1);
   };
   const handleLogout = () => {
-    dispatch(logout());  // Dispatch the logout action
-    navigate('/login');  // Redirect the user to the login page
+    dispatch(logoutSuccess()); // Dispatch the logout action
+    navigate("/login"); // Redirect the user to the login page
   };
 
   return (
@@ -84,6 +81,7 @@ const Header = () => {
                   onPress={handleBackClick}
                   aria-label={"Head Back Button"}
                   UNSAFE_style={{ border: "none" }}
+                  UNSAFE_className="cursorPointer"
                 >
                   <ChevronLeft size="M" />
                 </Button>
@@ -95,14 +93,14 @@ const Header = () => {
         {/* Right section with Welcome message and Sign out */}
         <View paddingEnd={"size-300"}>
           <Flex direction="row" alignItems="center" gap="size-200">
-          {isAuthenticated && (
-            <>
-              <Heading level={4}>Welcome, {user.firstName}</Heading> {/* Display username */}
-              <Button onPress={handleLogout} variant="primary">
-                Sign Out
-              </Button>
-            </>
-              )}
+            {isAuthenticated && (
+              <>
+                <Heading level={4}>Welcome, {user.firstName}</Heading>{" "}{/* Display username */}
+                <Button onPress={handleLogout} variant="primary" UNSAFE_className="cursorPointer">
+                  Sign Out
+                </Button>
+              </>
+            )}
           </Flex>
         </View>
       </Flex>

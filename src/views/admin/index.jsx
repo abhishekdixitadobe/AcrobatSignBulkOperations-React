@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, {useState } from "react";
 import { Provider, defaultTheme, Button, TextField, Form, Heading, View } from '@adobe/react-spectrum';
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Footer from "../../components/footer";
 import AgreementAction from "../../components/agreement-action";
+import { ToastQueue } from "@react-spectrum/toast";
 
-function setup() {
+function Setup() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -15,6 +16,11 @@ function setup() {
 
   const handleLogin = async (params) => {
     try {
+      if (!email || !password) {
+        ToastQueue.negative("Please enter valid credentials", {timeout: 5000});
+        return;
+      }
+
       const apiUrl = `/api/admin-login`;
       const reqBody = { 
         email,
@@ -30,21 +36,18 @@ function setup() {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Fetched Agreements Data:", data);
         
         dispatch(setAgreements(data.agreementAssetsResults));
         navigate("/agreementsList");
       } else {
         console.error("API call failed", response.statusText);
-        alert("Failed to fetch agreements. Please try again later.");
+        ToastQueue.negative("An error occurred. Please try again later.", {timeout: 5000});
       }
     } catch (error) {
       console.error("Error making API call:", error);
-      alert("An error occurred. Please try again later.");
+      ToastQueue.negative("An error occurred. Please try again later.", {timeout: 5000});
     } finally {
-      setIsLoading(false);
     }
-    console.log("Logging in...");
   };
 
   return (
@@ -59,7 +62,8 @@ function setup() {
         alignItems="center"
         justifyContent="center"
       >
-          <Heading level={1}>Login</Heading>
+        <Form validationBehavior="native" isRequired necessityIndicator="label">
+          <Heading level={1} UNSAFE_style={{ textAlign: "center" }}>Login</Heading>
           <TextField
             label="Email"
             type="email"
@@ -80,9 +84,10 @@ function setup() {
             params={{ email, password }}
             onAction={handleLogin}
             buttonText="Login"
-            isDisabled={!email}
+            // isDisabled={!email}
             heading="Bulk Operation Tool setup"
           />
+        </Form>
       </View>
       <View gridArea="footer" width="100%" height={"size-1000"}>
         <Footer
@@ -94,4 +99,4 @@ function setup() {
   );
 }
 
-export default setup;
+export default Setup;

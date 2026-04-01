@@ -35,10 +35,8 @@ const ActionCard = ({
   const dispatch = useDispatch();
 
   const handleNavigation = () => {
-    // navigate(configs.page, { state: { configs } });
     dispatch(setAPI(configs.api));
     dispatch(setLandingPage(false));
-    //navigate("/info", { state: { heading: heading, configs: configs } });
     navigate(configs.page, { state: { heading, configs } });
   };
 
@@ -53,6 +51,7 @@ const ActionCard = ({
           <Flex marginStart="size-200">
             <Button
               UNSAFE_style={{ whiteSpace: "nowrap" }}
+              UNSAFE_className="cursorPointer"
               variant="accent"
               style="fill"
               onPress={handleNavigation}

@@ -2,10 +2,14 @@ import { createSlice } from '@reduxjs/toolkit';
 
 const agreementsSlice = createSlice({
   name: 'agreementsList',
-  initialState: [], // Initialize as an empty array
+  initialState: { 
+    agreementAssetsResults: [], // Initialize as an empty array
+    email: "", // Initialize email as an empty string
+  },
   reducers: {
     setAgreements: (state, action) => {
-      return action.payload; // Replace the state with the incoming payload
+      state.agreementAssetsResults = action.payload.results; // Update agreementAssetsResults
+      state.email = action.payload.email; // Update email
     },
   },
 });
