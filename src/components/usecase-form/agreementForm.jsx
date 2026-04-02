@@ -316,7 +316,7 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
                 value={title}
                 onChange={setTitle}
               />
-              <ComboBox label="Select Statuses" onSelectionChange={() => {}}>
+              <ComboBox label="Select Statuses" isRequired onSelectionChange={() => {}}>
                 {agreementStatusOptions.map((option) => (
                   <Item key={option.id} textValue={option.name}>
                     <Checkbox

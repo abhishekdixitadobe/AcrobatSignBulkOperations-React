@@ -1,17 +1,19 @@
 import { Button, ButtonGroup, Flex, View } from "@adobe/react-spectrum";
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 
 const Footer = (props) => {
   const {
     disabledBack = false,
+    hasSelection = true,
     showDownload = false,
     showDownloadFormField = false,
     showAuditReport = false,
     showDelete = false,
+    showDeleteTemplate = false,
     showDownloadList = false,
     showGetAgreements = false,
     deleteOnPress = () => {},
+    deleteTemplateOnPress = () => {},
     downloadOnPress = () => {},
     downloadList = () => {},
     downloadFormField = () => {},
@@ -25,6 +27,7 @@ const Footer = (props) => {
     downloadFormField: false,
     auditReport: false,
     delete: false,
+    deleteTemplate: false,
   });
 
   const handleAsyncAction = async (action, key) => {
@@ -37,95 +40,105 @@ const Footer = (props) => {
   };
 
   return (
-    <View backgroundColor={"gray-50"} height="100%">
-      <Flex direction="row" height="100%" gap="size-100" alignItems={"center"}>
-        <View paddingX={"size-800"} width="100%">
-          <Flex justifyContent="space-between">
-            <Flex justifyContent="end">
-              <ButtonGroup>
-                <Button
-                  UNSAFE_className="cursorPointer"
-                  variant="secondary"
-                  onPress={() => window.history.back()}
-                  isDisabled={disabledBack}
-                >
-                  Back
-                </Button>
+    <View backgroundColor="gray-50" height="100%">
+      <Flex direction="row" height="100%" alignItems="center" paddingX="size-800">
+        <Flex justifyContent="space-between" alignItems="center" width="100%">
 
-                {showDownload && (
-                  <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
-                    isPending={isLoading.download}
-                    onPress={() => handleAsyncAction(downloadOnPress, "download")}
-                  >
-                    Download
-                  </Button>
-                )}
+          <Button
+            UNSAFE_className="cursorPointer"
+            variant="secondary"
+            onPress={() => window.history.back()}
+            isDisabled={disabledBack}
+          >
+            Back
+          </Button>
 
-                {showDownloadList && (
-                  <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
-                    isPending={isLoading.downloadList}
-                    onPress={() =>
-                      handleAsyncAction(downloadList, "downloadList")
-                    }
-                  >
-                    Download List
-                  </Button>
-                )}
+          <ButtonGroup>
+            {showDownload && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="cta"
+                isPending={isLoading.download}
+                isDisabled={!hasSelection}
+                onPress={() => handleAsyncAction(downloadOnPress, "download")}
+              >
+                Download
+              </Button>
+            )}
 
-                {showGetAgreements && (
-                  <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
-                    onPress={agreementList}
-                  >
-                    Get Agreements
-                  </Button>
-                )}
+            {showDownloadList && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="cta"
+                isPending={isLoading.downloadList}
+                isDisabled={!hasSelection}
+                onPress={() => handleAsyncAction(downloadList, "downloadList")}
+              >
+                Download List
+              </Button>
+            )}
 
-                {showDownloadFormField && (
-                  <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
-                    isPending={isLoading.downloadFormField}
-                    onPress={() =>
-                      handleAsyncAction(downloadFormField, "downloadFormField")
-                    }
-                  >
-                    Download Form Fields
-                  </Button>
-                )}
+            {showGetAgreements && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="cta"
+                isDisabled={!hasSelection}
+                onPress={agreementList}
+              >
+                Get Agreements
+              </Button>
+            )}
 
-                {showAuditReport && (
-                  <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
-                    isPending={isLoading.auditReport}
-                    onPress={() =>
-                      handleAsyncAction(downloadAuditReport, "auditReport")
-                    }
-                  >
-                    Download Audit Report
-                  </Button>
-                )}
+            {showDownloadFormField && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="cta"
+                isPending={isLoading.downloadFormField}
+                isDisabled={!hasSelection}
+                onPress={() => handleAsyncAction(downloadFormField, "downloadFormField")}
+              >
+                Download Form Fields
+              </Button>
+            )}
 
-                {showDelete && (
-                  <Button
-                    UNSAFE_className="cursorPointer"
-                    variant="cta"
-                    isPending={isLoading.delete}
-                    onPress={() => handleAsyncAction(deleteOnPress, "delete")}
-                  >
-                    Delete Agreements
-                  </Button>
-                )}
-              </ButtonGroup>
-            </Flex>
-          </Flex>
-        </View>
+            {showAuditReport && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="cta"
+                isPending={isLoading.auditReport}
+                isDisabled={!hasSelection}
+                onPress={() => handleAsyncAction(downloadAuditReport, "auditReport")}
+              >
+                Download Audit Report
+              </Button>
+            )}
+
+            {showDelete && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="cta"
+                isPending={isLoading.delete}
+                isDisabled={!hasSelection}
+                onPress={() => handleAsyncAction(deleteOnPress, "delete")}
+              >
+                Delete Agreements
+              </Button>
+            )}
+
+            {showDeleteTemplate && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="negative"
+                isPending={isLoading.deleteTemplate}
+                isDisabled={!hasSelection}
+                onPress={() => handleAsyncAction(deleteTemplateOnPress, "deleteTemplate")}
+              >
+                Delete Templates
+              </Button>
+            )}
+          </ButtonGroup>
+
+        </Flex>
       </Flex>
     </View>
   );

@@ -878,6 +878,49 @@ app.post('/api/libraryDocuments', async (req, res) => {
   }
 });
 
+app.post('/api/delete-template', async (req, res) => {
+  console.log('Inside /api/delete-template');
+
+  try {
+    await checkSession(req, res);
+
+    const { templates } = req.body; // [{ id, email }]
+    if (!Array.isArray(templates) || templates.length === 0) {
+      return res.status(400).json({ error: 'No templates provided for deletion.' });
+    }
+
+    const apiClient = createApiClient(req);
+    const results = [];
+
+    for (const { id, email } of templates) {
+      const endpoint = `${ADOBE_SIGN_BASE_URL}libraryDocuments/${id}/state`;
+      try {
+        await apiClient.put(endpoint, { state: 'REMOVED' }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-user': `email:${email}`,
+            'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          },
+        });
+        results.push({ id, success: true });
+      } catch (error) {
+        console.error(`Failed to delete template ${id}:`, error.message);
+        results.push({ id, success: false, error: error.message });
+      }
+    }
+
+    const userId = req.session.userId;
+    const userEmail = req.session.userEmail;
+    logger.info('User Activity', { userId, email: userEmail, action: 'Template Delete', results });
+
+    res.json({ results });
+
+  } catch (error) {
+    console.error('Error deleting templates:', error.message);
+    res.status(error.response?.status || 500).json({ error: error.message });
+  }
+});
+
 app.post('/api/widgets', async (req, res) => {
   
   try {

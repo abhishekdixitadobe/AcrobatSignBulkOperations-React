@@ -57,6 +57,29 @@ export const downloadFilesAsZip = async (endpoint, agreementsToDownload, token, 
   }
 };
 
+export const deleteTemplates = async (templatesToDelete, token) => {
+  if (templatesToDelete.length === 0) {
+    ToastQueue.negative("No templates selected for deletion.", { timeout: 5000 });
+    return;
+  }
+
+  try {
+    const response = await apiCall("/api/delete-template", "POST", token, { templates: templatesToDelete });
+    const data = await response.json();
+
+    const failed = data.results.filter((r) => !r.success);
+    if (failed.length > 0) {
+      ToastQueue.negative(`${failed.length} template(s) failed to delete.`, { timeout: 5000 });
+    } else {
+      ToastQueue.positive("All selected templates deleted successfully.", { timeout: 5000 });
+    }
+    return data.results;
+  } catch (error) {
+    console.error("Failed to delete templates:", error);
+    ToastQueue.negative("Delete failed. Please try again.", { timeout: 5000 });
+  }
+};
+
 export const downloadList = async (ids, agreements, fileName, emailsToDownload) => {
   if (ids.length === 0) {
     ToastQueue.negative("No items selected for download.", { timeout: 5000 });
