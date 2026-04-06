@@ -40,7 +40,6 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
   const validateDateRange = (start, end) => start < end;
 
   const authState = useSelector((state) => state.auth || {});
-  const user = authState.user;
 
   useEffect(() => {
     if (onChange) {
@@ -136,7 +135,7 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
         setIsLoading(false);
         return;
       }
-      
+
       ToastQueue.positive("Agreements fetched successfully!!", { timeout: 5000 });
       navigate("/agreementsList");
     } catch (error) {
@@ -378,7 +377,7 @@ const AgreementForm = ({ onChange, setUploadFiles }) => {
                   />
                 </Flex>
             </DisclosurePanel>
-        </Disclosure> 
+        </Disclosure>
       */}
     </Accordion>
   );

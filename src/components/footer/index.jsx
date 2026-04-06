@@ -12,12 +12,14 @@ const Footer = (props) => {
     showDeleteTemplate = false,
     showDownloadList = false,
     showGetAgreements = false,
+    showDownloadViewList = false,
     deleteOnPress = () => {},
     deleteTemplateOnPress = () => {},
     downloadOnPress = () => {},
     downloadList = () => {},
     downloadFormField = () => {},
     downloadAuditReport = () => {},
+    downloadViewList = () => {},
     agreementList = () => {},
   } = props;
 
@@ -26,6 +28,7 @@ const Footer = (props) => {
     downloadList: false,
     downloadFormField: false,
     auditReport: false,
+    viewList: false,
     delete: false,
     deleteTemplate: false,
   });
@@ -110,6 +113,18 @@ const Footer = (props) => {
                 onPress={() => handleAsyncAction(downloadAuditReport, "auditReport")}
               >
                 Download Audit Report
+              </Button>
+            )}
+
+            {showDownloadViewList && (
+              <Button
+                UNSAFE_className="cursorPointer"
+                variant="cta"
+                isPending={isLoading.viewList}
+                isDisabled={!hasSelection}
+                onPress={() => handleAsyncAction(downloadViewList, "viewList")}
+              >
+                Download View List
               </Button>
             )}
 

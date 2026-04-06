@@ -598,6 +598,85 @@ app.post('/api/download-agreements', async (req, res) => {
 });
 
 
+app.post('/api/download-agreement-views', async (req, res) => {
+  const { agreements } = req.body; // [{ id, email }]
+
+  if (!Array.isArray(agreements) || agreements.length === 0) {
+    return res.status(400).json({ error: 'No agreements provided.' });
+  }
+
+  try {
+    await checkSession(req, res);
+
+    const apiClient = createApiClient(req);
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const zip = new JSZip();
+
+    const processAgreement = async (agreement, attempt = 1) => {
+      const { id, email } = agreement;
+      try {
+        const headers = {
+          'Authorization': `Bearer ${req.session.tokens.accessToken}`,
+          'Content-Type': 'application/json',
+        };
+        if (email) {
+          headers['x-api-user'] = `email:${email}`;
+        }
+
+        const response = await apiClient.post(
+          `${ADOBE_SIGN_BASE_URL}agreements/${id}/views`,
+          { name: 'DOCUMENT',
+            commonViewConfiguration: {autoLoginUser: true}
+           },
+          { headers }
+        );
+
+        const views = response.data?.agreementViewList || [];
+        return { id, email, views };
+      } catch (error) {
+        if (attempt < MAX_RETRIES) {
+          await delay(attempt * 1000);
+          return processAgreement(agreement, attempt + 1);
+        }
+        console.error(`Failed to fetch views for ${id}:`, error.message);
+        return { id, email, views: [], error: error.message };
+      }
+    };
+
+    const results = [];
+    let batchSize = parseInt(BATCH_SIZE) || 10;
+    for (let i = 0; i < agreements.length; i += batchSize) {
+      const batch = agreements.slice(i, i + batchSize);
+      const batchResults = await Promise.all(batch.map((a) => processAgreement(a)));
+      results.push(...batchResults);
+      if (i + batchSize < agreements.length) await delay(2000);
+    }
+
+    // Build CSV
+    let csv = 'Agreement ID,Email,View Name,URL,Expiration\n';
+    for (const { id, email, views } of results) {
+      if (views.length === 0) {
+        csv += `${id},${email},,,\n`;
+      } else {
+        for (const view of views) {
+          csv += `${id},${email},${view.name || ''},${view.url || ''},${view.expiration || ''}\n`;
+        }
+      }
+    }
+
+    zip.file('agreement_views.csv', csv);
+    const content = await zip.generateAsync({ type: 'nodebuffer' });
+    res.set({
+      'Content-Type': 'application/zip',
+      'Content-Disposition': 'attachment; filename="agreement_views.zip"',
+    });
+    res.send(content);
+  } catch (error) {
+    console.error('Error fetching agreement views:', error.message);
+    res.status(500).json({ error: 'Failed to fetch agreement views.' });
+  }
+});
+
 app.post('/api/download-templateFormfields', async (req, res) => {
   console.log("Inside download-templateFormfields--")
   const { agreements } = req.body; // Expecting an array of objects with id and email

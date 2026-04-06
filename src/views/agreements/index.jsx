@@ -108,7 +108,9 @@ const AgreementsPage = () => {
           showDownloadList={true}
           showDownloadFormField={true}
           showAuditReport={true}
+          showDownloadViewList={true}
           showDelete={showDeleteButton}
+          hasSelection={selectedKeys === "all" || selectedKeys.size > 0}
           downloadList={async () => {
             handleDownloadList("agreementsList.zip");
           }}
@@ -120,6 +122,9 @@ const AgreementsPage = () => {
           }
           downloadAuditReport={async () =>
             handleDownload("/api/download-auditReport", "auditReports.zip")
+          }
+          downloadViewList={async () =>
+            handleDownload("/api/download-agreement-views", "agreement_views.zip")
           }
         />
       </View>
